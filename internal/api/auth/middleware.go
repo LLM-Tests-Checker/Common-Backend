@@ -15,7 +15,7 @@ func AccessTokenValidationMiddleware(nextHandler http.Handler) http.Handler {
 				ErrorCode:    constants.ErrorInvalidAccessToken,
 				ErrorMessage: "Access token is missing",
 			}
-			http2.ReturnApiError(responseWriter, apiError)
+			http2.ReturnApiError(responseWriter, apiError, http.StatusForbidden)
 			return
 		}
 

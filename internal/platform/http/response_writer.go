@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-func ReturnApiError(responseWriter http.ResponseWriter, error common.ApiError) {
+func ReturnApiError(responseWriter http.ResponseWriter, error common.ApiError, statusCode int32) {
 
 }
