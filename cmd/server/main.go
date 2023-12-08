@@ -5,6 +5,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/constants"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/tracing"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"log"
@@ -31,6 +32,8 @@ func configureRoutes() *mux.Router {
 	addTestsRouts(router)
 	addLLMRouts(router)
 
+	router.Use(tracing.RequestTracingIdInflatingMiddleware)
+
 	return router
 }
 
@@ -50,35 +53,61 @@ func addAuthRouts(router *mux.Router) {
 }
 
 func addTestsRouts(router *mux.Router) {
-	router.
+	getMyTestsRouter := router.
 		Methods(http.MethodGet).
+		Subrouter()
+	getMyTestsRouter.
 		Path(constants.GetMyTestsPath).
 		HandlerFunc(tests.GetMyTestsHandler)
-	router.
+	getMyTestsRouter.Use(auth.AccessTokenValidationMiddleware)
+
+	getTestByIdRouter := router.
 		Methods(http.MethodGet).
+		Subrouter()
+	getTestByIdRouter.
 		Path(constants.GetTestByIdPath).
 		HandlerFunc(tests.GetTestByIdHandler)
-	router.
+	getTestByIdRouter.Use(auth.AccessTokenValidationMiddleware)
+
+	createTestRouter := router.
 		Methods(http.MethodPut).
+		Subrouter()
+	createTestRouter.
 		Path(constants.CreateTestPath).
 		HandlerFunc(tests.CreateTestHandler)
-	router.
+	createTestRouter.Use(auth.AccessTokenValidationMiddleware)
+
+	deleteTestRouter := router.
 		Methods(http.MethodDelete).
+		Subrouter()
+	deleteTestRouter.
 		Path(constants.DeleteTestByIdPath).
 		HandlerFunc(tests.DeleteTestHandler)
+	deleteTestRouter.Use(auth.AccessTokenValidationMiddleware)
 }
 
 func addLLMRouts(router *mux.Router) {
-	router.
+	launchLLMRouter := router.
 		Methods(http.MethodPost).
+		Subrouter()
+	launchLLMRouter.
 		Path(constants.LaunchLLMCheckPath).
 		HandlerFunc(llm.LaunchLLMCheckHandler)
-	router.
+	launchLLMRouter.Use(auth.AccessTokenValidationMiddleware)
+
+	llmStatusRouter := router.
 		Methods(http.MethodGet).
+		Subrouter()
+	llmStatusRouter.
 		Path(constants.GetLLMCheckStatusPath).
 		HandlerFunc(llm.GetLLMCheckStatusHandler)
-	router.
+	llmStatusRouter.Use(auth.AccessTokenValidationMiddleware)
+
+	llmResultRouter := router.
 		Methods(http.MethodGet).
+		Subrouter()
+	llmResultRouter.
 		Path(constants.GetLLMCheckResultPath).
 		HandlerFunc(llm.GetLLMCheckResultHandler)
+	llmResultRouter.Use(auth.AccessTokenValidationMiddleware)
 }
