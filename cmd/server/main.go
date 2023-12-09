@@ -5,7 +5,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/constants"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/tracing"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logging"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"log"
@@ -32,7 +32,7 @@ func configureRoutes() *mux.Router {
 	addTestsRouts(router)
 	addLLMRouts(router)
 
-	router.Use(tracing.RequestTracingIdInflatingMiddleware)
+	router.Use(logging.RequestTracingIdInflatingMiddleware)
 
 	return router
 }
