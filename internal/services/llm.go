@@ -1,6 +1,9 @@
 package services
 
-import "github.com/LLM-Tests-Checker/Common-Backend/internal/components/llm"
+import (
+	"errors"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/llm"
+)
 
 type LLMCheckerService struct {
 	launcher       llm.Launcher
@@ -20,14 +23,14 @@ func NewLLMCheckerService(
 	}
 }
 
-func (service *LLMCheckerService) LaunchLLMCheck() {
-
+func (service *LLMCheckerService) LaunchLLMCheck(currentUserId int32, testId, llmSlug string) (error, *llm.LaunchResult) {
+	return errors.New("not implemented yet"), nil
 }
 
-func (service *LLMCheckerService) GetLLMCHeckStatus() {
-
+func (service *LLMCheckerService) GetLLMCHeckStatus(currentUserId int32, testId string) (error, *llm.CheckStatus) {
+	return errors.New("not implemented yet"), nil
 }
 
-func (service *LLMCheckerService) GetLLMCheckResult() {
-
+func (service *LLMCheckerService) GetLLMCheckResult(currentUserId int32, testId string) (error, *llm.CheckResult) {
+	return errors.New("not implemented yet"), nil
 }

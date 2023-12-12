@@ -4,6 +4,10 @@ type LaunchLLMCheckRequest struct {
 	LLMSlug string `json:"llm_slug"`
 }
 
+type LaunchLLMCheckResponse struct {
+	LaunchIdentifier string `json:"launch_identifier"`
+}
+
 type GetLLMCheckStatusResponse struct {
 	Statuses []GetLLMCheckStatusValue `json:"statuses"`
 }

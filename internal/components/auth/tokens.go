@@ -5,11 +5,15 @@ import "fmt"
 type TokensProvider interface {
 	GenerateTokens(userId int32) (error, *Tokens)
 
-	ValidateAccessToken(accessToken string) error
-
 	GenerateAccessToken(refreshToken string) (error, string)
+}
 
+type TokenUserIdProvider interface {
 	ProvideUserId(accessToken string) (error, int32)
+}
+
+type TokensValidator interface {
+	ValidateAccessToken(accessToken string) error
 }
 
 type Tokens struct {
@@ -18,6 +22,14 @@ type Tokens struct {
 }
 
 func NewTokensProvider() TokensProvider {
+	return jwtTokensProvider{}
+}
+
+func NewTokensValidator() TokensValidator {
+	return jwtTokensProvider{}
+}
+
+func NewTokensUserIdProvider() TokenUserIdProvider {
 	return jwtTokensProvider{}
 }
 
