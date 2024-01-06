@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/constants"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm"
@@ -8,8 +9,10 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logging"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -18,11 +21,27 @@ func main() {
 		log.Fatal(err)
 	}
 
+	configureLogger()
+
+	serverPort, exists := os.LookupEnv("SERVER_PORT")
+	if !exists {
+		serverPort = "8080"
+	}
+	logrus.Infof("Server starting on port: %s", serverPort)
+
 	router := configureRoutes()
-	err = http.ListenAndServe("localhost:8080", router)
+	err = http.ListenAndServe(fmt.Sprintf("localhost:%s", serverPort), router)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func configureLogger() {
+	logrus.SetReportCaller(true)
+	formatter := new(logrus.TextFormatter)
+	formatter.TimestampFormat = "2006-01-02 15:04:05.000"
+	formatter.FullTimestamp = true
+	logrus.SetFormatter(formatter)
 }
 
 func configureRoutes() *mux.Router {
@@ -32,7 +51,7 @@ func configureRoutes() *mux.Router {
 	addTestsRouts(router)
 	addLLMRouts(router)
 
-	router.Use(logging.RequestTracingIdInflatingMiddleware)
+	router.Use(logging.RequestLoggingMiddleware)
 
 	return router
 }

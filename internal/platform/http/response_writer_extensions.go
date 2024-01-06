@@ -9,17 +9,17 @@ import (
 )
 
 func ReturnApiError(responseWriter http.ResponseWriter, error common.ApiError, statusCode int32) {
-	encoder := json.NewEncoder(responseWriter)
-	err := encoder.Encode(error)
-	if err != nil {
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 	defaultStatusCode := error.GetDefaultStatusCode()
 	if defaultStatusCode != nil {
 		responseWriter.WriteHeader(int(*defaultStatusCode))
 	} else {
 		responseWriter.WriteHeader(int(statusCode))
+	}
+	encoder := json.NewEncoder(responseWriter)
+	err := encoder.Encode(error)
+	if err != nil {
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 }
 

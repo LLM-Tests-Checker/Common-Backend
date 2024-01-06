@@ -1,9 +1,14 @@
 package logging
 
-import "net/http"
+import (
+	"github.com/sirupsen/logrus"
+	"net/http"
+)
 
-func RequestTracingIdInflatingMiddleware(nextHandler http.Handler) http.Handler {
+func RequestLoggingMiddleware(nextHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+		logrus.Infof("Request: %s %s", request.Method, request.RequestURI)
+
 		responseWriter.Header().Set("Content-Type", "application/json")
 		nextHandler.ServeHTTP(responseWriter, request)
 	})
