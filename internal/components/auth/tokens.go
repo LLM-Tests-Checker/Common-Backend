@@ -87,7 +87,7 @@ func (provider jwtTokensProvider) GenerateTokens(userId int32) (error, *Tokens) 
 }
 
 func (provider jwtTokensProvider) ValidateAccessToken(accessToken string) error {
-	token, err := jwt.Parse(accessToken)
+	//token, err := jwt.Parse(accessToken)
 	return fmt.Errorf("not implemented yet")
 }
 

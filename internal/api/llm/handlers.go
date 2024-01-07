@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/common"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/constants"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/auth"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/llm"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services"
@@ -13,8 +12,7 @@ import (
 )
 
 var (
-	llmService          *services.LLMCheckerService
-	tokenUserIdProvider auth.TokenUserIdProvider
+	llmService *services.LLMCheckerService
 )
 
 func init() {
@@ -23,7 +21,6 @@ func init() {
 	resultSelector := llm.NewResultSelector()
 
 	llmService = services.NewLLMCheckerService(launcher, statusSelector, resultSelector)
-	tokenUserIdProvider = auth.NewTokensUserIdProvider()
 }
 
 func LaunchLLMCheckHandler(responseWriter http.ResponseWriter, request *http.Request) {
@@ -42,7 +39,7 @@ func LaunchLLMCheckHandler(responseWriter http.ResponseWriter, request *http.Req
 		http2.ReturnError(responseWriter, err, http.StatusBadRequest)
 		return
 	}
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return
@@ -75,7 +72,7 @@ func GetLLMCheckStatusHandler(responseWriter http.ResponseWriter, request *http.
 		}
 		http2.ReturnApiError(responseWriter, apiError, http.StatusBadRequest)
 	}
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return
@@ -107,7 +104,7 @@ func GetLLMCheckResultHandler(responseWriter http.ResponseWriter, request *http.
 		}
 		http2.ReturnApiError(responseWriter, apiError, http.StatusBadRequest)
 	}
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return

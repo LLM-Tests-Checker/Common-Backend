@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/common"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/constants"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/auth"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/tests"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services"
@@ -13,8 +12,7 @@ import (
 )
 
 var (
-	testsService        *services.TestsService
-	tokenUserIdProvider auth.TokenUserIdProvider
+	testsService *services.TestsService
 )
 
 func init() {
@@ -22,11 +20,10 @@ func init() {
 	updater := tests.NewUpdater()
 
 	testsService = services.NewTestsService(selector, updater)
-	tokenUserIdProvider = auth.NewTokensUserIdProvider()
 }
 
 func GetMyTestsHandler(responseWriter http.ResponseWriter, request *http.Request) {
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return
@@ -64,7 +61,7 @@ func GetTestByIdHandler(responseWriter http.ResponseWriter, request *http.Reques
 		}
 		http2.ReturnApiError(responseWriter, apiError, http.StatusBadRequest)
 	}
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return
@@ -95,7 +92,7 @@ func CreateTestHandler(responseWriter http.ResponseWriter, request *http.Request
 		http2.ReturnError(responseWriter, err, http.StatusBadRequest)
 		return
 	}
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return
@@ -130,7 +127,7 @@ func DeleteTestHandler(responseWriter http.ResponseWriter, request *http.Request
 		}
 		http2.ReturnApiError(responseWriter, apiError, http.StatusBadRequest)
 	}
-	err, currentUserId := http2.GetCurrentUserId(request, tokenUserIdProvider)
+	err, currentUserId := http2.GetCurrentUserId(request)
 	if err != nil {
 		http2.ReturnError(responseWriter, err, http.StatusUnauthorized)
 		return
