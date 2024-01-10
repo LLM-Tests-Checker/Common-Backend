@@ -10,27 +10,153 @@ paths:
       tags: [ Auth ]
       operationId: auth_sign_in
       summary: User login to the system with username and password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignInRequest"
       responses:
         200:
           description: Successful login
+          headers:
+            X-LLM-Checker-Access-Token:
+              schema:
+                type: string
+              description: User unique access token
+            X-LLM-Checker-Refresh-Token:
+              schema:
+                type: string
+              description: User unique refresh token
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 
   /api/v1/auth/sign-up:
     post:
       tags: [ Auth ]
       operationId: auth_sign_up
       summary: User registration in the system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpRequest"
       responses:
         200:
           description: Successful registration
+          headers:
+            X-LLM-Checker-Access-Token:
+              schema:
+                type: string
+              description: User unique access token
+            X-LLM-Checker-Refresh-Token:
+              schema:
+                type: string
+              description: User unique refresh token
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /api/v1/auth/refresh-token:
     post:
       tags: [ Auth ]
       operationId: auth_refresh_token
       summary: Updating system access token using refresh token
+      parameters:
+        - $ref: "#/components/parameters/RefreshToken"
       responses:
         200:
-          description: Successful update
+          description: Successful refresh
+          headers:
+            X-LLM-Checker-Access-Token:
+              schema:
+                type: string
+              description: User unique access token
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Refresh token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
 
 
 
@@ -40,37 +166,255 @@ paths:
       tags: [ Tests ]
       operationId: tests_my
       summary: Getting "my" created tests
+      security:
+        - AccessToken: []
+      parameters:
+        - in: query
+          name: page-number
+          description: Pagination page number
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+            maximum: 100
+        - in: query
+          name: page-size
+          description: Pagination page size
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
       responses:
         200:
           description: List of created tests
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Test"
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /api/v1/test/{testId}/get:
     get:
       tags: [ Tests ]
       operationId: test_by_id
       summary: Getting complete information of a specific test
+      security:
+        - AccessToken: [ ]
+      parameters:
+        - $ref: "#/components/parameters/TestId"
       responses:
         200:
           description: Full information of the test
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        403:
+          description: Access denied
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /api/v1/test/create:
     put:
       tags: [ Tests ]
       operationId: test_create
       summary: Creating a new test
+      security:
+        - AccessToken: [ ]
+      requestBody:
+        $ref: "#/components/schemas/CreateTestRequest"
       responses:
         200:
           description: Full information of the test
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Test"
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /api/v1/test/{testId}/delete:
     delete:
       tags: [ Tests ]
       operationId: test_delete
       summary: Deleting an existing test
+      security:
+        - AccessToken: [ ]
+      parameters:
+        - $ref: "#/components/parameters/TestId"
       responses:
-        200:
-          description: Successful deleting
-
+        201:
+          description: Successful delete
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        403:
+          description: Access denied
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
 
 
@@ -79,31 +423,237 @@ paths:
       tags: [ LLM ]
       operationId: llm_launch
       summary: Launching test analysis using a generative language model
+      security:
+        - AccessToken: [ ]
+      parameters:
+        - $ref: "#/components/parameters/TestId"
+      requestBody:
+        $ref: "#/components/schemas/LaunchLLMCheckRequest"
       responses:
         200:
           description: Successful launch
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LaunchLLMCheckResponse"
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        403:
+          description: Access denied
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /api/v1/test/{testId}/llm/status:
     get:
       tags: [ LLM ]
       operationId: llm_status
       summary: Getting the current status of test analysis
+      security:
+        - AccessToken: [ ]
+      parameters:
+        - $ref: "#/components/parameters/TestId"
       responses:
         200:
           description: Current analysis status
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetLLMCheckStatusResponse"
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        403:
+          description: Access denied
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
   /api/v1/test/{testId}/llm/result:
     get:
       tags: [ LLM ]
       operationId: llm_result
       summary: Getting all the test analysis results
+      security:
+        - AccessToken: [ ]
+      parameters:
+        - $ref: "#/components/parameters/TestId"
       responses:
         200:
           description: Current analysis results
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetLLMCheckResultResponse"
+        400:
+          description: Bad request
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        401:
+          description: Access token expired
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        403:
+          description: Access denied
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        500:
+          description: Internal server error
+          headers:
+            X-LLM-Checker-Request-Trace-Id:
+              schema:
+                type: string
+              description: Request trace identifier using for development
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 
 
 components:
+  securitySchemes:
+    AccessToken:
+      type: apiKey
+      description: Authentication JWT access token. To get token you need to login in to the system.
+      name: X-LLM-Checker-Access-Token
+      in: header
+
+
+  parameters:
+    RefreshToken:
+      in: header
+      name: X-LLM-Checker-Refresh-Token
+      required: true
+      schema:
+        type: string
+    TestId:
+      in: path
+      name: testId
+      required: true
+      schema:
+        type: string
+
   schemas:
+    ApiError:
+      type: object
+      required: [ error_code, error_message ]
+      properties:
+        error_code:
+          type: integer
+          description: Error unique code
+        error_message:
+          type: string
+          description: Error description
+
     SignInRequest:
       type: object
       required: [ user_login, user_password_hash ]
