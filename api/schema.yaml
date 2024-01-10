@@ -1,0 +1,345 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Common-Backend
+  description: Full API definition for LLM-Tests-Checker service.
+
+paths:
+  /api/v1/auth/sign-in:
+    post:
+      tags: [ Auth ]
+      operationId: auth_sign_in
+      summary: User login to the system with username and password
+      responses:
+        200:
+          description: Successful login
+
+  /api/v1/auth/sign-up:
+    post:
+      tags: [ Auth ]
+      operationId: auth_sign_up
+      summary: User registration in the system
+      responses:
+        200:
+          description: Successful registration
+
+  /api/v1/auth/refresh-token:
+    post:
+      tags: [ Auth ]
+      operationId: auth_refresh_token
+      summary: Updating system access token using refresh token
+      responses:
+        200:
+          description: Successful update
+
+
+
+
+  /api/v1/tests/my:
+    get:
+      tags: [ Tests ]
+      operationId: tests_my
+      summary: Getting "my" created tests
+      responses:
+        200:
+          description: List of created tests
+
+  /api/v1/test/{testId}/get:
+    get:
+      tags: [ Tests ]
+      operationId: test_by_id
+      summary: Getting complete information of a specific test
+      responses:
+        200:
+          description: Full information of the test
+
+  /api/v1/test/create:
+    put:
+      tags: [ Tests ]
+      operationId: test_create
+      summary: Creating a new test
+      responses:
+        200:
+          description: Full information of the test
+
+  /api/v1/test/{testId}/delete:
+    delete:
+      tags: [ Tests ]
+      operationId: test_delete
+      summary: Deleting an existing test
+      responses:
+        200:
+          description: Successful deleting
+
+
+
+
+  /api/v1/test/{testId}/llm/launch:
+    post:
+      tags: [ LLM ]
+      operationId: llm_launch
+      summary: Launching test analysis using a generative language model
+      responses:
+        200:
+          description: Successful launch
+
+  /api/v1/test/{testId}/llm/status:
+    get:
+      tags: [ LLM ]
+      operationId: llm_status
+      summary: Getting the current status of test analysis
+      responses:
+        200:
+          description: Current analysis status
+
+  /api/v1/test/{testId}/llm/result:
+    get:
+      tags: [ LLM ]
+      operationId: llm_result
+      summary: Getting all the test analysis results
+      responses:
+        200:
+          description: Current analysis results
+
+
+components:
+  schemas:
+    SignInRequest:
+      type: object
+      required: [ user_login, user_password_hash ]
+      properties:
+        user_login:
+          type: string
+          description: User unique login
+          minLength: 3
+          maxLength: 15
+        user_password_hash:
+          type: string
+          description: User password hash in SHA512
+          format: sha512
+          minLength: 512
+          maxLength: 512
+    SignUpRequest:
+      type: object
+      required: [ user_name, user_login, user_password_hash ]
+      properties:
+        user_name:
+          type: string
+          description: User friendly name
+          minLength: 2
+          maxLength: 20
+        user_login:
+          type: string
+          description: User unique login
+          minLength: 3
+          maxLength: 15
+        user_password_hash:
+          type: string
+          description: User password hash in SHA512
+          format: sha512
+          minLength: 512
+          maxLength: 512
+
+
+    Test:
+      type: object
+      required: [ identifier, name, questions ]
+      properties:
+        identifier:
+          type: string
+          format: uuid
+          description: Test identifier UUID v4
+        name:
+          type: string
+          description: Test unique name
+          minLength: 1
+          maxLength: 30
+        description:
+          type: string
+          description: Test description
+          maxLength: 100
+        questions:
+          type: array
+          description: Test questions
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/TestQuestion"
+    TestQuestion:
+      type: object
+      required: [ number, text, answers ]
+      properties:
+        number:
+          type: integer
+          description: Question number in the list
+          minimum: 0
+          maximum: 20
+        text:
+          type: string
+          description: Question text
+          minLength: 1
+          maxLength: 150
+        answers:
+          type: array
+          description: Question answers
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/QuestionAnswer"
+    QuestionAnswer:
+      type: object
+      required: [ number, text, is_correct ]
+      properties:
+        number:
+          type: integer
+          description: Answer number in the list
+          minimum: 0
+          maximum: 10
+        text:
+          type: string
+          description: Answer text
+          minLength: 1
+          maxLength: 150
+        is_correct:
+          type: boolean
+          description: Is answer correct
+    CreateTestRequest:
+      type: object
+      required: [ name, questions]
+      properties:
+        name:
+          type: string
+          description: Test unique name
+          minLength: 1
+          maxLength: 30
+        description:
+          type: string
+          description: Test description
+          maxLength: 100
+        questions:
+          type: array
+          description: Test questions
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/CreateTestQuestionPayload"
+    CreateTestQuestionPayload:
+      type: object
+      required: [ number, text, answers ]
+      properties:
+        number:
+          type: integer
+          description: Question number in the list
+          minimum: 0
+          maximum: 20
+        text:
+          type: string
+          description: Question text
+          minLength: 1
+          maxLength: 150
+        answers:
+          type: array
+          description: Question answers
+          minItems: 1
+          maxItems: 10
+          items:
+            $ref: "#/components/schemas/CreateTestQuestionAnswerPayload"
+    CreateTestQuestionAnswerPayload:
+      type: object
+      required: [ number, text, is_correct ]
+      properties:
+        number:
+          type: integer
+          description: Answer number in the list
+          minimum: 0
+          maximum: 10
+        text:
+          type: string
+          description: Answer text
+          minLength: 1
+          maxLength: 150
+        is_correct:
+          type: boolean
+          description: Is answer correct
+
+
+
+
+    LaunchLLMCheckRequest:
+      type: object
+      required: [ llm_slug ]
+      properties:
+        llm_slug:
+          type: string
+          description: Large language model unique name
+          minLength: 1
+          maxLength: 15
+    LaunchLLMCheckResponse:
+      type: object
+      required: [ launch_identifier ]
+      properties:
+        launch_identifier:
+          type: string
+          format: uuid
+          description: Launch identifier UUID v4
+    GetLLMCheckStatusResponse:
+      type: object
+      required: [ statuses ]
+      properties:
+        statuses:
+          type: array
+          description: Statuses of all LLM analyses
+          items:
+            $ref: "#/components/schemas/GetLLMCheckStatusValue"
+    GetLLMCheckStatusValue:
+      type: object
+      required: [ llm_slug, status ]
+      properties:
+        llm_slug:
+          type: string
+          description: Large language model unique name
+          minLength: 1
+          maxLength: 15
+        status:
+          type: string
+          description: LLM analysis status
+          enum: [ NOT_STARTED, IN_PROGRESS, COMPLETED, ERROR]
+    GetLLMCheckResultResponse:
+      type: object
+      required: [ results ]
+      properties:
+        results:
+          type: array
+          description: Results of all LLM analyses
+          items:
+            $ref: "#/components/schemas/GetLLMCheckResultValue"
+    GetLLMCheckResultValue:
+      type: object
+      required: [ llm_slug, answers ]
+      properties:
+        llm_slug:
+          type: string
+          description: Large language model unique name
+          minLength: 1
+          maxLength: 15
+        answers:
+          type: array
+          description: LLM answers of the test questions
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: "#/components/schemas/GetLLMCheckResultLLMAnswer"
+    GetLLMCheckResultLLMAnswer:
+      type: object
+      required: [ question_number, selected_answer_number ]
+      properties:
+        question_number:
+          type: integer
+          description: Question number in test
+          minimum: 0
+          maximum: 20
+        selected_answer_number:
+          type: integer
+          description: LLM selected answer number in questions list
+          minimum: 0
+          maximum: 10

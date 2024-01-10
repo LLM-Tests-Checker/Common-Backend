@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: common-backend-deployment
+  labels:
+    app: common-backend
+    owner: Ferum-bot
+    tier: backend
+    infrastructure: golang
+  namespace: default
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: common-backend-application
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: common-backend-application
+        tier: backend
+        owner: Ferum-bot
+        infrastructure: golang
+    spec:
+      containers:
+        - name: common-backend-container
+          image: $REPOSITORY_NAME:$IMAGE_TAG
+          livenessProbe:
+            httpGet:
+              port:
+          readinessProbe:
+            httpGet:
+              port:
+          startupProbe:
+            httpGet:
+              port:
+          ports:
+            - containerPort:
+
