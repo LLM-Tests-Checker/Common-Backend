@@ -1,132 +1,88 @@
 package main
 
 import (
-	"fmt"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/constants"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logging"
-	"github.com/gorilla/mux"
+	"context"
+	refresh_token "github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth/refresh-token"
+	sign_in "github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth/sign-in"
+	sign_up "github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth/sign-up"
+	get_results "github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm/get-results"
+	get_statuses "github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm/get-statuses"
+	launch_check "github.com/LLM-Tests-Checker/Common-Backend/internal/api/llm/launch-check"
+	create_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/create-test"
+	delete_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/delete-test"
+	get_my_tests "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-my-tests"
+	get_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-test"
+	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"log"
-	"net/http"
 	"os"
 )
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Errorf("godotenv.Load: %s", err)
+		os.Exit(1)
 	}
 
-	configureLogger()
+	ctx := context.Background()
+
+	logger := configureLogger(ctx)
 
 	serverPort, exists := os.LookupEnv("SERVER_PORT")
 	if !exists {
 		serverPort = "8080"
 	}
-	logrus.Infof("Server starting on port: %s", serverPort)
 
-	router := configureRoutes()
-	err = http.ListenAndServe(fmt.Sprintf("localhost:%s", serverPort), router)
+	router := configureRouter(logger)
+
+	logger.Infof("Server started on port: %s", serverPort)
+}
+
+func configureRouter(logger *logrus.Logger) *chi.Mux {
+	router := chi.NewRouter()
+
+	swagger, err := dto.GetSwagger()
 	if err != nil {
-		log.Fatal(err)
+		logrus.Errorf("dto.GetSwagger: %s", err)
 	}
-}
 
-func configureLogger() {
-	logrus.SetReportCaller(true)
-	formatter := new(logrus.TextFormatter)
-	formatter.TimestampFormat = "2006-01-02 15:04:05.000"
-	formatter.FullTimestamp = true
-	logrus.SetFormatter(formatter)
-}
+	router.Use(middleware.Recoverer)
 
-func configureRoutes() *mux.Router {
-	router := mux.NewRouter()
+	refreshTokenHandler := refresh_token.New(logger)
+	signInHandler := sign_in.New(logger)
+	signUpHandler := sign_up.New(logger)
 
-	addAuthRouts(router)
-	addTestsRouts(router)
-	addLLMRouts(router)
+	getLLMResultsHandler := get_results.New(logger)
+	getLLMStatusesHandler := get_statuses.New(logger)
+	launchLLMCheckHandler := launch_check.New(logger)
 
-	router.Use(logging.RequestLoggingMiddleware)
+	createTestHandler := create_test.New(logger)
+	deleteTestHandler := delete_test.New(logger)
+	getMyTestsHandler := get_my_tests.New(logger)
+	getTestHandler := get_test.New(logger)
 
 	return router
 }
 
-func addAuthRouts(router *mux.Router) {
-	router.
-		Methods(http.MethodPost).
-		Path(constants.SignUpPath).
-		HandlerFunc(auth.SignUpHandler)
-	router.
-		Methods(http.MethodPost).
-		Path(constants.SignInPath).
-		HandlerFunc(auth.SignInHandler)
-	router.
-		Methods(http.MethodPost).
-		Path(constants.RefreshAccessTokenPath).
-		HandlerFunc(auth.RefreshAccessTokenHandler)
-}
+func configureLogger(ctx context.Context) *logrus.Logger {
+	logger := logrus.New()
 
-func addTestsRouts(router *mux.Router) {
-	getMyTestsRouter := router.
-		Methods(http.MethodGet).
-		Subrouter()
-	getMyTestsRouter.
-		Path(constants.GetMyTestsPath).
-		HandlerFunc(tests.GetMyTestsHandler)
-	getMyTestsRouter.Use(auth.AccessTokenValidationMiddleware)
+	formatter := new(logrus.JSONFormatter)
+	formatter.TimestampFormat = "2006-01-02 15:04:05.000"
+	formatter.PrettyPrint = false
 
-	getTestByIdRouter := router.
-		Methods(http.MethodGet).
-		Subrouter()
-	getTestByIdRouter.
-		Path(constants.GetTestByIdPath).
-		HandlerFunc(tests.GetTestByIdHandler)
-	getTestByIdRouter.Use(auth.AccessTokenValidationMiddleware)
+	launchEnvironment, exists := os.LookupEnv("ENVIRONMENT")
+	if !exists {
+		launchEnvironment = "local"
+	}
 
-	createTestRouter := router.
-		Methods(http.MethodPut).
-		Subrouter()
-	createTestRouter.
-		Path(constants.CreateTestPath).
-		HandlerFunc(tests.CreateTestHandler)
-	createTestRouter.Use(auth.AccessTokenValidationMiddleware)
+	logger.WithContext(ctx)
+	logger.SetReportCaller(true)
+	logger.SetFormatter(formatter)
+	logger.WithField("environment", launchEnvironment)
 
-	deleteTestRouter := router.
-		Methods(http.MethodDelete).
-		Subrouter()
-	deleteTestRouter.
-		Path(constants.DeleteTestByIdPath).
-		HandlerFunc(tests.DeleteTestHandler)
-	deleteTestRouter.Use(auth.AccessTokenValidationMiddleware)
-}
-
-func addLLMRouts(router *mux.Router) {
-	launchLLMRouter := router.
-		Methods(http.MethodPost).
-		Subrouter()
-	launchLLMRouter.
-		Path(constants.LaunchLLMCheckPath).
-		HandlerFunc(llm.LaunchLLMCheckHandler)
-	launchLLMRouter.Use(auth.AccessTokenValidationMiddleware)
-
-	llmStatusRouter := router.
-		Methods(http.MethodGet).
-		Subrouter()
-	llmStatusRouter.
-		Path(constants.GetLLMCheckStatusPath).
-		HandlerFunc(llm.GetLLMCheckStatusHandler)
-	llmStatusRouter.Use(auth.AccessTokenValidationMiddleware)
-
-	llmResultRouter := router.
-		Methods(http.MethodGet).
-		Subrouter()
-	llmResultRouter.
-		Path(constants.GetLLMCheckResultPath).
-		HandlerFunc(llm.GetLLMCheckResultHandler)
-	llmResultRouter.Use(auth.AccessTokenValidationMiddleware)
+	return logger
 }

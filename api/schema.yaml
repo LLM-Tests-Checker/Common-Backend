@@ -307,7 +307,10 @@ paths:
       security:
         - AccessToken: [ ]
       requestBody:
-        $ref: "#/components/schemas/CreateTestRequest"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTestRequest"
       responses:
         200:
           description: Full information of the test
@@ -428,7 +431,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/TestId"
       requestBody:
-        $ref: "#/components/schemas/LaunchLLMCheckRequest"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LaunchLLMCheckRequest"
       responses:
         200:
           description: Successful launch
