@@ -17,6 +17,6 @@ func New(
 	}
 }
 
-func (handler *Handler) AuthTestCreate(w http.ResponseWriter, r *http.Request) {
+func (handler *Handler) TestCreate(w http.ResponseWriter, r *http.Request) {
 
 }

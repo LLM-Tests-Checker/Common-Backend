@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	refresh_token "github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth/refresh-token"
 	sign_in "github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth/sign-in"
 	sign_up "github.com/LLM-Tests-Checker/Common-Backend/internal/api/auth/sign-up"
@@ -13,11 +15,17 @@ import (
 	get_my_tests "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-my-tests"
 	get_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-test"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
+	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -28,7 +36,6 @@ func main() {
 	}
 
 	ctx := context.Background()
-
 	logger := configureLogger(ctx)
 
 	serverPort, exists := os.LookupEnv("SERVER_PORT")
@@ -38,17 +45,51 @@ func main() {
 
 	router := configureRouter(logger)
 
-	logger.Infof("Server started on port: %s", serverPort)
+	server := http.Server{
+		Addr:              fmt.Sprintf("localhost:%s", serverPort),
+		Handler:           router,
+		ReadTimeout:       2 * time.Second,
+		ReadHeaderTimeout: 500 * time.Millisecond,
+		WriteTimeout:      5 * time.Second,
+		IdleTimeout:       30 * time.Second,
+		BaseContext: func(listener net.Listener) context.Context {
+			return context.WithValue(ctx, logger2.Logger, logger)
+		},
+	}
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		logger.Infof("Server started on port: %s", serverPort)
+
+		err := server.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Errorf("server.ListerAndServer: %s", err)
+			close(done)
+		}
+	}()
+
+	<-done
+	logger.Infof("Server is stopping")
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	err = server.Shutdown(ctx)
+	if err != nil {
+		logger.Errorf("server.Shutdown: %s", err)
+		os.Exit(1)
+	}
+
+	logger.Infof("Server stopped")
 }
 
 func configureRouter(logger *logrus.Logger) *chi.Mux {
 	router := chi.NewRouter()
 
-	swagger, err := dto.GetSwagger()
-	if err != nil {
-		logrus.Errorf("dto.GetSwagger: %s", err)
-	}
-
+	router.Use(logger2.RequestTraceIdMiddleware)
+	router.Use(logger2.LoggingMiddleware)
 	router.Use(middleware.Recoverer)
 
 	refreshTokenHandler := refresh_token.New(logger)
@@ -63,6 +104,21 @@ func configureRouter(logger *logrus.Logger) *chi.Mux {
 	deleteTestHandler := delete_test.New(logger)
 	getMyTestsHandler := get_my_tests.New(logger)
 	getTestHandler := get_test.New(logger)
+
+	server := server{
+		refreshToken: refreshTokenHandler,
+		signIn:       signInHandler,
+		signUp:       signUpHandler,
+		getResults:   getLLMResultsHandler,
+		getStatuses:  getLLMStatusesHandler,
+		launchCheck:  launchLLMCheckHandler,
+		createTest:   createTestHandler,
+		deleteTest:   deleteTestHandler,
+		getMyTests:   getMyTestsHandler,
+		getTest:      getTestHandler,
+	}
+
+	dto.HandlerFromMux(&server, router)
 
 	return router
 }
@@ -85,4 +141,59 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 	logger.WithField("environment", launchEnvironment)
 
 	return logger
+}
+
+type server struct {
+	refreshToken *refresh_token.Handler
+	signIn       *sign_in.Handler
+	signUp       *sign_up.Handler
+
+	getResults  *get_results.Handler
+	getStatuses *get_statuses.Handler
+	launchCheck *launch_check.Handler
+
+	createTest *create_test.Handler
+	deleteTest *delete_test.Handler
+	getMyTests *get_my_tests.Handler
+	getTest    *get_test.Handler
+}
+
+func (s *server) AuthRefreshToken(w http.ResponseWriter, r *http.Request, params dto.AuthRefreshTokenParams) {
+	s.refreshToken.AuthRefreshToken(w, r, params)
+}
+
+func (s *server) AuthSignIn(w http.ResponseWriter, r *http.Request) {
+	s.signIn.AuthSignIn(w, r)
+}
+
+func (s *server) AuthSignUp(w http.ResponseWriter, r *http.Request) {
+	s.signUp.AuthSignUp(w, r)
+}
+
+func (s *server) TestCreate(w http.ResponseWriter, r *http.Request) {
+	s.createTest.TestCreate(w, r)
+}
+
+func (s *server) TestDelete(w http.ResponseWriter, r *http.Request, testId dto.TestId) {
+	s.deleteTest.TestDelete(w, r, testId)
+}
+
+func (s *server) TestById(w http.ResponseWriter, r *http.Request, testId dto.TestId) {
+	s.getTest.TestById(w, r, testId)
+}
+
+func (s *server) LlmLaunch(w http.ResponseWriter, r *http.Request, testId dto.TestId) {
+	s.launchCheck.LlmLaunch(w, r, testId)
+}
+
+func (s *server) LlmResult(w http.ResponseWriter, r *http.Request, testId dto.TestId) {
+	s.getResults.LlmResult(w, r, testId)
+}
+
+func (s *server) LlmStatus(w http.ResponseWriter, r *http.Request, testId dto.TestId) {
+	s.getStatuses.LlmStatus(w, r, testId)
+}
+
+func (s *server) TestsMy(w http.ResponseWriter, r *http.Request, params dto.TestsMyParams) {
+	s.getMyTests.TestsMy(w, r, params)
 }
