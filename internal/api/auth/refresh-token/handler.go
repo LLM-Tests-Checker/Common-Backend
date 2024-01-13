@@ -29,7 +29,7 @@ func (handler *Handler) AuthRefreshToken(response http.ResponseWriter, r *http.R
 		err := error2.NewBackendError(
 			error2.InvalidRefreshToken,
 			"Refresh token is missing",
-			http.StatusBadRequest,
+			http.StatusUnauthorized,
 		)
 		http2.ReturnError(response, err)
 		return

@@ -2,10 +2,11 @@ package tests
 
 import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
+	"github.com/google/uuid"
 	"time"
 )
 
-type TestId = string
+type TestId = uuid.UUID
 
 type Test struct {
 	Identifier  TestId

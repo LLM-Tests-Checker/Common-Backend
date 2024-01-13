@@ -8,22 +8,25 @@ import (
 )
 
 type Handler struct {
-	logger  *logrus.Logger
-	deleter testDeleter
+	logger      *logrus.Logger
+	deleter     testDeleter
+	tokenParser tokenParser
 }
 
 func New(
 	logger *logrus.Logger,
 	deleter testDeleter,
+	tokenParser tokenParser,
 ) *Handler {
 	return &Handler{
-		logger:  logger,
-		deleter: deleter,
+		logger:      logger,
+		deleter:     deleter,
+		tokenParser: tokenParser,
 	}
 }
 
 func (handler *Handler) TestDelete(response http.ResponseWriter, r *http.Request, testId dto.TestId) {
-	userId, err := http2.GetUserIdFromAccessToken(r)
+	userId, err := http2.GetUserIdFromAccessToken(r, handler.tokenParser)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

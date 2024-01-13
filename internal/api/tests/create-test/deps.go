@@ -13,3 +13,7 @@ type testCreator interface {
 type testMapper interface {
 	MapModelToDto(model *tests.Test) dto.Test
 }
+
+type tokenParser interface {
+	ParseUserId(accessToken string) (users.UserId, error)
+}

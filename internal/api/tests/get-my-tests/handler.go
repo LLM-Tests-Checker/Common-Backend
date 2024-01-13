@@ -3,34 +3,35 @@ package get_my_tests
 import (
 	"encoding/json"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
+	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type Handler struct {
-	logger         *logrus.Logger
-	selector       testsSelector
-	inputValidator inputValidator
-	mapper         testMapper
+	logger      *logrus.Logger
+	selector    testsSelector
+	mapper      testMapper
+	tokenParser tokenParser
 }
 
 func New(
 	logger *logrus.Logger,
 	selector testsSelector,
-	inputValidator inputValidator,
 	mapper testMapper,
+	tokenParser tokenParser,
 ) *Handler {
 	return &Handler{
-		logger:         logger,
-		selector:       selector,
-		inputValidator: inputValidator,
-		mapper:         mapper,
+		logger:      logger,
+		selector:    selector,
+		mapper:      mapper,
+		tokenParser: tokenParser,
 	}
 }
 
 func (handler *Handler) TestsMy(response http.ResponseWriter, r *http.Request, params dto.TestsMyParams) {
-	userId, err := http2.GetUserIdFromAccessToken(r)
+	userId, err := http2.GetUserIdFromAccessToken(r, handler.tokenParser)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return
@@ -38,7 +39,7 @@ func (handler *Handler) TestsMy(response http.ResponseWriter, r *http.Request, p
 
 	pageNumber := int32(params.PageNumber)
 	pageSize := int32(params.PageSize)
-	err = handler.inputValidator.ValidatePagingParameters(pageNumber, pageSize)
+	err = validatePagingParameters(pageNumber, pageSize)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return
@@ -60,4 +61,30 @@ func (handler *Handler) TestsMy(response http.ResponseWriter, r *http.Request, p
 		http2.ReturnErrorWithStatusCode(response, http.StatusBadRequest, err)
 		return
 	}
+}
+
+func validatePagingParameters(pageNumber, pageSize int32) error {
+	const minPageNumberValue = 0
+	const maxPageNumberValue = 100
+
+	if pageNumber < minPageNumberValue || pageNumber > maxPageNumberValue {
+		return error2.NewBackendError(
+			error2.InputValidationError,
+			"Invalid page number",
+			http.StatusBadRequest,
+		)
+	}
+
+	const minPageSizeValue = 1
+	const maxPageSizeValue = 30
+
+	if pageSize < minPageSizeValue || pageSize > maxPageSizeValue {
+		return error2.NewBackendError(
+			error2.InputValidationError,
+			"Invalid page size",
+			http.StatusBadRequest,
+		)
+	}
+
+	return nil
 }

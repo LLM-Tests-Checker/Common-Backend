@@ -8,3 +8,7 @@ import (
 type testDeleter interface {
 	DeleteTest(authorId users.UserId, testId tests.TestId) error
 }
+
+type tokenParser interface {
+	ParseUserId(accessToken string) (users.UserId, error)
+}

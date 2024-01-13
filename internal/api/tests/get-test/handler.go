@@ -9,25 +9,28 @@ import (
 )
 
 type Handler struct {
-	logger   *logrus.Logger
-	selector testSelector
-	mapper   testMapper
+	logger      *logrus.Logger
+	selector    testSelector
+	mapper      testMapper
+	tokenParser tokenParser
 }
 
 func New(
 	logger *logrus.Logger,
 	selector testSelector,
 	mapper testMapper,
+	tokenParser tokenParser,
 ) *Handler {
 	return &Handler{
-		logger:   logger,
-		selector: selector,
-		mapper:   mapper,
+		logger:      logger,
+		selector:    selector,
+		mapper:      mapper,
+		tokenParser: tokenParser,
 	}
 }
 
 func (handler *Handler) TestById(response http.ResponseWriter, r *http.Request, testId dto.TestId) {
-	userId, err := http2.GetUserIdFromAccessToken(r)
+	userId, err := http2.GetUserIdFromAccessToken(r, handler.tokenParser)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

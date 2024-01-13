@@ -14,8 +14,13 @@ import (
 	delete_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/delete-test"
 	get_my_tests "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-my-tests"
 	get_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-test"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/mappers"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
@@ -91,18 +96,26 @@ func configureRouter(logger *logrus.Logger) *chi.Mux {
 	router.Use(logger2.LoggingMiddleware)
 	router.Use(middleware.Recoverer)
 
-	refreshTokenHandler := refresh_token.New(logger)
-	signInHandler := sign_in.New(logger)
-	signUpHandler := sign_up.New(logger)
+	authService := auth.NewAuthService()
+	llmService := llm.NewLLMService()
+	testsService := tests.NewTestsService()
 
-	getLLMResultsHandler := get_results.New(logger)
-	getLLMStatusesHandler := get_statuses.New(logger)
-	launchLLMCheckHandler := launch_check.New(logger)
+	userValidator := users.NewValidator()
 
-	createTestHandler := create_test.New(logger)
-	deleteTestHandler := delete_test.New(logger)
-	getMyTestsHandler := get_my_tests.New(logger)
-	getTestHandler := get_test.New(logger)
+	testDtoMapper := mappers.NewTestMapper()
+
+	refreshTokenHandler := refresh_token.New(logger, authService)
+	signInHandler := sign_in.New(logger, authService, userValidator)
+	signUpHandler := sign_up.New(logger, authService, userValidator)
+
+	getLLMResultsHandler := get_results.New(logger, llmService, authService)
+	getLLMStatusesHandler := get_statuses.New(logger, llmService, authService)
+	launchLLMCheckHandler := launch_check.New(logger, llmService, authService)
+
+	createTestHandler := create_test.New(logger, testsService, testDtoMapper, authService)
+	deleteTestHandler := delete_test.New(logger, testsService, authService)
+	getMyTestsHandler := get_my_tests.New(logger, testsService, testDtoMapper, authService)
+	getTestHandler := get_test.New(logger, testsService, testDtoMapper, authService)
 
 	server := server{
 		refreshToken: refreshTokenHandler,

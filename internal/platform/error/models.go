@@ -26,3 +26,16 @@ func NewBackendError(
 func (err *BackendError) Error() string {
 	return fmt.Sprintf("[BackendError] Code: %d, Message: %s", err.Code, err.Message)
 }
+
+func Wrap(
+	err error,
+	code ErrorCode,
+	message string,
+	statusCode int,
+) *BackendError {
+	return &BackendError{
+		Code:       code,
+		Message:    fmt.Sprintf("%s: %s", message, err.Error()),
+		StatusCode: statusCode,
+	}
+}
