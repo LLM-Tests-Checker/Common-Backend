@@ -172,6 +172,7 @@ paths:
         - in: query
           name: page-number
           description: Pagination page number
+          required: true
           schema:
             type: integer
             default: 0
@@ -180,6 +181,7 @@ paths:
         - in: query
           name: page-size
           description: Pagination page size
+          required: true
           schema:
             type: integer
             default: 20
