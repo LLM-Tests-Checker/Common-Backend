@@ -88,7 +88,6 @@ func main() {
 func configureRouter(logger *logrus.Logger) *chi.Mux {
 	router := chi.NewRouter()
 
-	router.Use(logger2.RequestTraceIdMiddleware)
 	router.Use(logger2.LoggingMiddleware)
 	router.Use(middleware.Recoverer)
 
