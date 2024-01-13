@@ -24,7 +24,7 @@ func New(
 }
 
 func (handler *Handler) AuthRefreshToken(response http.ResponseWriter, r *http.Request, params dto.AuthRefreshTokenParams) {
-	refreshToken := r.Header.Get(http2.RefreshTokenHeaderName)
+	refreshToken := params.XLLMCheckerRefreshToken
 	if refreshToken == "" {
 		err := error2.NewBackendError(
 			error2.InvalidRefreshToken,
@@ -35,7 +35,7 @@ func (handler *Handler) AuthRefreshToken(response http.ResponseWriter, r *http.R
 		return
 	}
 
-	accessToken, err := handler.tokenRefresher.RefreshAccessToken(refreshToken)
+	accessToken, err := handler.tokenRefresher.RefreshAccessToken(r.Context(), refreshToken)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

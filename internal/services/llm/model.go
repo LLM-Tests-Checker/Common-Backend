@@ -31,6 +31,8 @@ type ModelCheck struct {
 	ModelSlug    ModelSlug
 	TargetTestId tests.TestId
 	AuthorId     users.UserId
+	Status       CheckStatus
+	Answers      []ModelTestAnswer
 	CreatedAt    time.Time
 }
 

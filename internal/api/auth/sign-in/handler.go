@@ -41,7 +41,9 @@ func (handler *Handler) AuthSignIn(response http.ResponseWriter, r *http.Request
 		return
 	}
 
-	userTokens, err := handler.authenticator.PerformSignIn(request.UserLogin, request.UserPasswordHash)
+	userTokens, err := handler.authenticator.PerformSignIn(
+		r.Context(), request.UserLogin, request.UserPasswordHash,
+	)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

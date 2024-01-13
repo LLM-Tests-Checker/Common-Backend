@@ -36,7 +36,7 @@ func (handler *Handler) TestById(response http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	test, err := handler.selector.GetTestById(userId, testId)
+	test, err := handler.selector.GetTestById(r.Context(), userId, testId)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

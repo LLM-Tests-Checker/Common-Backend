@@ -1,5 +1,7 @@
 package refresh_token
 
+import "context"
+
 type tokenRefresher interface {
-	RefreshAccessToken(refreshToken string) (string, error)
+	RefreshAccessToken(ctx context.Context, refreshToken string) (string, error)
 }

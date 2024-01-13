@@ -15,16 +15,22 @@ import (
 	get_my_tests "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-my-tests"
 	get_test "github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/get-test"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/mappers"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/jwt"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
+	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
+	tests2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/tests"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"net"
 	"net/http"
 	"os"
@@ -48,7 +54,7 @@ func main() {
 		serverPort = "8080"
 	}
 
-	router := configureRouter(logger)
+	router := configureRouter(logger, ctx)
 
 	server := http.Server{
 		Addr:              fmt.Sprintf("localhost:%s", serverPort),
@@ -90,15 +96,75 @@ func main() {
 	logger.Infof("Server stopped")
 }
 
-func configureRouter(logger *logrus.Logger) *chi.Mux {
+func configureRouter(
+	logger *logrus.Logger,
+	ctx context.Context,
+) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(logger2.LoggingMiddleware)
+	router.Use(logger2.InfrastructureMiddleware)
 	router.Use(middleware.Recoverer)
 
-	authService := auth.NewAuthService()
-	llmService := llm.NewLLMService()
-	testsService := tests.NewTestsService()
+	launchEnvironment, exists := os.LookupEnv("ENVIRONMENT")
+	if !exists {
+		logger.Errorf("ENVIRONMENT enviroment not provided")
+		os.Exit(1)
+	}
+
+	mongoUrl, exists := os.LookupEnv("MONGODB_URL")
+	if !exists {
+		logger.Errorf("MONGODB_URL enviroment not provided")
+		os.Exit(1)
+	}
+
+	mongodbLogLevel := options2.LogLevelInfo
+	if launchEnvironment == "local" {
+		mongodbLogLevel = options2.LogLevelDebug
+	}
+
+	mongoLogOptions := options2.Logger().SetComponentLevel(options2.LogComponentAll, mongodbLogLevel)
+	options := options2.Client().
+		ApplyURI(mongoUrl).
+		SetTimeout(time.Second).
+		SetAppName("common-backend").
+		SetConnectTimeout(10 * time.Second).
+		SetMaxConnecting(10).
+		SetMinPoolSize(5).
+		SetRetryReads(true).
+		SetMaxConnIdleTime(30 * time.Second).
+		SetServerSelectionTimeout(10 * time.Second).
+		SetLoggerOptions(mongoLogOptions)
+
+	client, err := mongo.Connect(ctx, options)
+	if err != nil {
+		logger.Errorf("Can't connect to mongo: %s", err)
+		os.Exit(1)
+	}
+
+	databaseName, exists := os.LookupEnv("MONGODB_DATABASE")
+	if !exists {
+		logger.Errorf("MONGODB_DATABASE enviroment not provided")
+		os.Exit(1)
+	}
+
+	database := client.Database(databaseName)
+
+	jwtConfig := jwt.Config{
+		AccessTokenLiveTime:  0,
+		RefreshTokenLiveTime: 0,
+		AccessSecretKey:      "",
+		RefreshSecretKey:     "",
+	}
+	jwtComponent := jwt.NewJWTComponent(jwtConfig)
+
+	userStorage := user.NewUserStorage(logger, database)
+	testsStorage := tests2.NewTestsStorage(logger, database)
+	llmStorage := llm2.NewLLMStorage(logger, database)
+
+	authService := auth.NewAuthService(userStorage, jwtComponent)
+	llmService := llm.NewLLMService(testsStorage, llmStorage)
+	testsService := tests.NewTestsService(testsStorage)
 
 	userValidator := users.NewValidator()
 
@@ -144,7 +210,8 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 
 	launchEnvironment, exists := os.LookupEnv("ENVIRONMENT")
 	if !exists {
-		launchEnvironment = "local"
+		logger.Errorf("ENVIRONMENT enviroment not provided")
+		os.Exit(1)
 	}
 
 	logger.WithContext(ctx)

@@ -1,13 +1,18 @@
 package get_test
 
 import (
+	"context"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 )
 
 type testSelector interface {
-	GetTestById(userId users.UserId, testId tests.TestId) (*tests.Test, error)
+	GetTestById(
+		ctx context.Context,
+		userId users.UserId,
+		testId tests.TestId,
+	) (*tests.Test, error)
 }
 
 type testMapper interface {
@@ -15,5 +20,5 @@ type testMapper interface {
 }
 
 type tokenParser interface {
-	ParseUserId(accessToken string) (users.UserId, error)
+	ParseUserId(ctx context.Context, accessToken string) (users.UserId, error)
 }

@@ -1,14 +1,19 @@
 package delete_test
 
 import (
+	"context"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 )
 
 type testDeleter interface {
-	DeleteTest(authorId users.UserId, testId tests.TestId) error
+	DeleteTest(
+		ctx context.Context,
+		authorId users.UserId,
+		testId tests.TestId,
+	) error
 }
 
 type tokenParser interface {
-	ParseUserId(accessToken string) (users.UserId, error)
+	ParseUserId(ctx context.Context, accessToken string) (users.UserId, error)
 }

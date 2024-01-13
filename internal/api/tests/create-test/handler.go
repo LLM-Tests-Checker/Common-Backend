@@ -46,7 +46,7 @@ func (handler *Handler) TestCreate(response http.ResponseWriter, r *http.Request
 	}
 
 	createData := mapRequestDtoToModel(request)
-	createdTest, err := handler.creator.CreateTest(userId, createData)
+	createdTest, err := handler.creator.CreateTest(r.Context(), userId, createData)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

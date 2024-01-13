@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	"net/http"
@@ -15,7 +16,7 @@ func ReturnError(response http.ResponseWriter, err error) {
 }
 
 type tokenParser interface {
-	ParseUserId(accessToken string) (users.UserId, error)
+	ParseUserId(ctx context.Context, accessToken string) (users.UserId, error)
 }
 
 func GetUserIdFromAccessToken(r *http.Request, tokenParser tokenParser) (users.UserId, error) {
@@ -29,7 +30,7 @@ func GetUserIdFromAccessToken(r *http.Request, tokenParser tokenParser) (users.U
 		return 0, err
 	}
 
-	userId, err := tokenParser.ParseUserId(accessToken)
+	userId, err := tokenParser.ParseUserId(r.Context(), accessToken)
 	if err != nil {
 		return 0, err
 	}

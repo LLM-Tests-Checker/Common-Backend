@@ -45,7 +45,7 @@ func (handler *Handler) TestsMy(response http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	tests, err := handler.selector.GetTestsByAuthorId(userId, pageNumber, pageSize)
+	tests, err := handler.selector.GetTestsByAuthorId(r.Context(), userId, pageNumber, pageSize)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

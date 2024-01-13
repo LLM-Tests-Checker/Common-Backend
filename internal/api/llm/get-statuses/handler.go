@@ -34,7 +34,7 @@ func (handler *Handler) LlmStatus(response http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	statuses, err := handler.selector.GetModelStatusesForTest(userId, testId)
+	statuses, err := handler.selector.GetModelStatusesForTest(r.Context(), userId, testId)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

@@ -49,7 +49,7 @@ func (handler *Handler) LlmLaunch(response http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	modelCheck, err := handler.launcher.LaunchModelCheck(userId, testId, llmSlug)
+	modelCheck, err := handler.launcher.LaunchModelCheck(r.Context(), userId, testId, llmSlug)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

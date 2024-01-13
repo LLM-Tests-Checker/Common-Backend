@@ -1,9 +1,12 @@
 package sign_up
 
-import "github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
+import (
+	"context"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
+)
 
 type authenticator interface {
-	PerformSignUp(name, login, passwordHash string) (*auth.UserTokens, error)
+	PerformSignUp(ctx context.Context, name, login, passwordHash string) (*auth.UserTokens, error)
 }
 
 type inputValidator interface {

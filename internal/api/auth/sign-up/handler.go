@@ -42,7 +42,10 @@ func (handler *Handler) AuthSignUp(response http.ResponseWriter, r *http.Request
 	}
 
 	userTokens, err := handler.authenticator.PerformSignUp(
-		request.UserName, request.UserLogin, request.UserPasswordHash,
+		r.Context(),
+		request.UserName,
+		request.UserLogin,
+		request.UserPasswordHash,
 	)
 	if err != nil {
 		http2.ReturnError(response, err)

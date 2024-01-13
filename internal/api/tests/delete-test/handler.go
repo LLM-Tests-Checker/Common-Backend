@@ -32,7 +32,7 @@ func (handler *Handler) TestDelete(response http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = handler.deleter.DeleteTest(userId, testId)
+	err = handler.deleter.DeleteTest(r.Context(), userId, testId)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return

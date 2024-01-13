@@ -34,7 +34,7 @@ func (handler *Handler) LlmResult(response http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	modelResults, err := handler.selector.GetAllResultsForTest(userId, testId)
+	modelResults, err := handler.selector.GetAllResultsForTest(r.Context(), userId, testId)
 	if err != nil {
 		http2.ReturnError(response, err)
 		return
