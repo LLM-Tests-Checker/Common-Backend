@@ -49,6 +49,8 @@ func main() {
 	ctx := context.Background()
 	logger := configureLogger(ctx)
 
+	logger.Info("Server is starting")
+
 	serverPort, exists := os.LookupEnv("SERVER_PORT")
 	if !exists {
 		serverPort = "8080"
@@ -218,6 +220,7 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
 	logger.WithField("environment", launchEnvironment)
+	logger.WithField("application", "server")
 
 	return logger
 }
