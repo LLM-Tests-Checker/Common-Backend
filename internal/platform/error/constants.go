@@ -18,4 +18,6 @@ const (
 	RefreshTokenExpired
 
 	InvalidLLMSlug
+
+	ServerError
 )

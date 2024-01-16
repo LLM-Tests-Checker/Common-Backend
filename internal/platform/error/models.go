@@ -8,13 +8,13 @@ type BackendError struct {
 	Code    ErrorCode
 	Message string
 
-	StatusCode int
+	StatusCode int32
 }
 
 func NewBackendError(
 	code ErrorCode,
 	message string,
-	statusCode int,
+	statusCode int32,
 ) *BackendError {
 	return &BackendError{
 		Code:       code,
@@ -23,7 +23,7 @@ func NewBackendError(
 	}
 }
 
-func (err *BackendError) Error() string {
+func (err BackendError) Error() string {
 	return fmt.Sprintf("[BackendError] Code: %d, Message: %s", err.Code, err.Message)
 }
 
@@ -31,7 +31,7 @@ func Wrap(
 	err error,
 	code ErrorCode,
 	message string,
-	statusCode int,
+	statusCode int32,
 ) *BackendError {
 	return &BackendError{
 		Code:       code,

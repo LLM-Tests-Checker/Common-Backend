@@ -7,4 +7,5 @@ type Config struct {
 	RefreshTokenLiveTime time.Duration
 	AccessSecretKey      string
 	RefreshSecretKey     string
+	Issuer               string
 }
