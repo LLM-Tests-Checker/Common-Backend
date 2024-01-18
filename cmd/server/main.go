@@ -17,6 +17,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/mappers"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/jwt"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
+	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
@@ -46,17 +47,19 @@ func main() {
 		os.Exit(1)
 	}
 
+	config := config2.ProvideServerConfig()
 	ctx := context.Background()
-	logger := configureLogger(ctx)
+	logger := configureLogger(ctx, config)
 
 	logger.Info("Server is starting")
 
-	serverPort, exists := os.LookupEnv("SERVER_PORT")
-	if !exists {
-		serverPort = "8080"
+	serverPort, err := config.GetServerPort()
+	if err != nil {
+		logrus.Errorf("config.GetServerPort: %s", err)
+		os.Exit(1)
 	}
 
-	router := configureRouter(logger, ctx)
+	router := configureRouter(logger, ctx, config)
 
 	server := http.Server{
 		Addr:              fmt.Sprintf("localhost:%s", serverPort),
@@ -101,6 +104,7 @@ func main() {
 func configureRouter(
 	logger *logrus.Logger,
 	ctx context.Context,
+	config config2.Server,
 ) *chi.Mux {
 	router := chi.NewRouter()
 
@@ -108,20 +112,20 @@ func configureRouter(
 	router.Use(logger2.InfrastructureMiddleware)
 	router.Use(middleware.Recoverer)
 
-	launchEnvironment, exists := os.LookupEnv("ENVIRONMENT")
-	if !exists {
-		logger.Errorf("ENVIRONMENT enviroment not provided")
+	launchEnvironment, err := config.GetEnvironment()
+	if err != nil {
+		logger.Errorf("config.GetEnvironment: %s", err)
 		os.Exit(1)
 	}
 
-	mongoUrl, exists := os.LookupEnv("MONGODB_URL")
-	if !exists {
-		logger.Errorf("MONGODB_URL enviroment not provided")
+	mongoUrl, err := config.GetMongoUrl()
+	if err != nil {
+		logger.Errorf("config.GetMongoUrl: %s", err)
 		os.Exit(1)
 	}
 
 	mongodbLogLevel := options2.LogLevelInfo
-	if launchEnvironment == "local" {
+	if launchEnvironment == config2.EnvironmentLocal {
 		mongodbLogLevel = options2.LogLevelDebug
 	}
 
@@ -144,19 +148,24 @@ func configureRouter(
 		os.Exit(1)
 	}
 
-	databaseName, exists := os.LookupEnv("MONGODB_DATABASE")
-	if !exists {
-		logger.Errorf("MONGODB_DATABASE enviroment not provided")
+	databaseName, err := config.GetMongoDatabase()
+	if err != nil {
+		logger.Errorf("config.GetMongoDatabase: %s", err)
 		os.Exit(1)
 	}
 
 	database := client.Database(databaseName)
 
+	accessTokenLifetime, err := config.GetAccessTokenLifetime()
+	refreshTokenLifetime, err := config.GetRefreshTokenLifetime()
+	accessTokenSecret, err := config.GetAccessTokenSecret()
+	refreshTokenSecret, err := config.GetRefreshTokenSecret()
+
 	jwtConfig := jwt.Config{
-		AccessTokenLiveTime:  0,
-		RefreshTokenLiveTime: 0,
-		AccessSecretKey:      "",
-		RefreshSecretKey:     "",
+		AccessTokenLiveTime:  accessTokenLifetime,
+		RefreshTokenLiveTime: refreshTokenLifetime,
+		AccessSecretKey:      accessTokenSecret,
+		RefreshSecretKey:     refreshTokenSecret,
 	}
 	jwtComponent := jwt.NewJWTComponent(jwtConfig)
 
@@ -203,16 +212,19 @@ func configureRouter(
 	return router
 }
 
-func configureLogger(ctx context.Context) *logrus.Logger {
+func configureLogger(
+	ctx context.Context,
+	config config2.Server,
+) *logrus.Logger {
 	logger := logrus.New()
 
 	formatter := new(logrus.JSONFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05.000"
 	formatter.PrettyPrint = false
 
-	launchEnvironment, exists := os.LookupEnv("ENVIRONMENT")
-	if !exists {
-		logger.Errorf("ENVIRONMENT enviroment not provided")
+	launchEnvironment, err := config.GetEnvironment()
+	if err != nil {
+		logger.Errorf("config.GetEnvironemnt: %s", err)
 		os.Exit(1)
 	}
 
