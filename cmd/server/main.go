@@ -59,7 +59,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	router := configureRouter(logger, ctx, config)
+	router, mongoClient := configureRouter(logger, ctx, config)
 
 	server := http.Server{
 		Addr:              fmt.Sprintf("localhost:%s", serverPort),
@@ -69,7 +69,7 @@ func main() {
 		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		BaseContext: func(listener net.Listener) context.Context {
-			return context.WithValue(ctx, logger2.Logger, logger)
+			return ctx
 		},
 	}
 
@@ -98,6 +98,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = mongoClient.Disconnect(ctx)
+	if err != nil {
+		logger.Errorf("mongoClient.Disconnect: %s", err)
+		os.Exit(1)
+	}
+
 	logger.Infof("Server stopped")
 }
 
@@ -105,7 +111,7 @@ func configureRouter(
 	logger *logrus.Logger,
 	ctx context.Context,
 	config config2.Server,
-) *chi.Mux {
+) (*chi.Mux, *mongo.Client) {
 	router := chi.NewRouter()
 
 	router.Use(logger2.LoggingMiddleware)
@@ -133,7 +139,7 @@ func configureRouter(
 	options := options2.Client().
 		ApplyURI(mongoUrl).
 		SetTimeout(time.Second).
-		SetAppName("common-backend").
+		SetAppName("server").
 		SetConnectTimeout(10 * time.Second).
 		SetMaxConnecting(10).
 		SetMinPoolSize(5).
@@ -142,7 +148,7 @@ func configureRouter(
 		SetServerSelectionTimeout(10 * time.Second).
 		SetLoggerOptions(mongoLogOptions)
 
-	client, err := mongo.Connect(ctx, options)
+	mongoClient, err := mongo.Connect(ctx, options)
 	if err != nil {
 		logger.Errorf("Can't connect to mongo: %s", err)
 		os.Exit(1)
@@ -154,7 +160,7 @@ func configureRouter(
 		os.Exit(1)
 	}
 
-	database := client.Database(databaseName)
+	mongoDatabase := mongoClient.Database(databaseName)
 
 	accessTokenLifetime, err := config.GetAccessTokenLifetime()
 	refreshTokenLifetime, err := config.GetRefreshTokenLifetime()
@@ -169,9 +175,9 @@ func configureRouter(
 	}
 	jwtComponent := jwt.NewJWTComponent(jwtConfig)
 
-	userStorage := user.NewUserStorage(logger, database)
-	testsStorage := tests2.NewTestsStorage(logger, database)
-	llmStorage := llm2.NewLLMStorage(logger, database)
+	userStorage := user.NewUserStorage(logger, mongoDatabase)
+	testsStorage := tests2.NewTestsStorage(logger, mongoDatabase)
+	llmStorage := llm2.NewLLMStorage(logger, mongoDatabase)
 
 	authService := auth.NewAuthService(userStorage, jwtComponent)
 	llmService := llm.NewLLMService(testsStorage, llmStorage)
@@ -209,7 +215,7 @@ func configureRouter(
 
 	dto.HandlerFromMux(&server, router)
 
-	return router
+	return router, mongoClient
 }
 
 func configureLogger(
