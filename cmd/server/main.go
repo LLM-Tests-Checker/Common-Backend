@@ -24,7 +24,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
-	tests2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/tests"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/test"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -176,7 +176,7 @@ func configureRouter(
 	jwtComponent := jwt.NewJWTComponent(jwtConfig)
 
 	userStorage := user.NewUserStorage(logger, mongoDatabase)
-	testsStorage := tests2.NewTestsStorage(logger, mongoDatabase)
+	testsStorage := test.NewTestsStorage(logger, mongoDatabase)
 	llmStorage := llm2.NewLLMStorage(logger, mongoDatabase)
 
 	authService := auth.NewAuthService(userStorage, jwtComponent)

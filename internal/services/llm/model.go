@@ -34,6 +34,7 @@ type ModelCheck struct {
 	Status       CheckStatus
 	Answers      []ModelTestAnswer
 	CreatedAt    time.Time
+	UpdatedAt    time.Time
 }
 
 type ModelCheckStatus struct {

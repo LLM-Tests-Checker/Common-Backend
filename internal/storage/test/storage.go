@@ -1,4 +1,4 @@
-package tests
+package test
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const testsCollectionName = "tests"
+const testCollectionName = "test"
 
 type Storage struct {
 	logger     *logrus.Logger
@@ -27,7 +27,7 @@ func NewTestsStorage(
 ) *Storage {
 	return &Storage{
 		logger:     logger,
-		collection: database.Collection(testsCollectionName),
+		collection: database.Collection(testCollectionName),
 	}
 }
 

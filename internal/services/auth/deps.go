@@ -12,7 +12,7 @@ type userStorage interface {
 
 	GetUserByLogin(ctx context.Context, login string) (*users.User, error)
 
-	CreateNewUser(ctx context.Context, name, login, passwordHash string) (users.User, error)
+	CreateNewUser(ctx context.Context, name, login, passwordHash string) (*users.User, error)
 }
 
 type jwtProvider interface {

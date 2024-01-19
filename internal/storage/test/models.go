@@ -1,4 +1,4 @@
-package tests
+package test
 
 const (
 	testFieldIdentifier = "identifier"
