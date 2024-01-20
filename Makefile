@@ -1,7 +1,5 @@
-SHELL := /bin/zsh
-
 install-all:
-
+	go install github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@latest
 
 generate-all:
 	mkdir -p internal/generated/schema

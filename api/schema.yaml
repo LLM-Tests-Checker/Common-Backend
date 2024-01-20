@@ -172,17 +172,17 @@ paths:
         - in: query
           name: page-number
           description: Pagination page number
-          required: true
           schema:
             type: integer
+            default: 0
             minimum: 0
             maximum: 100
         - in: query
           name: page-size
           description: Pagination page size
-          required: true
           schema:
             type: integer
+            default: 10
             minimum: 1
             maximum: 30
       responses:
@@ -674,8 +674,8 @@ components:
           type: string
           description: User password hash in SHA512
           format: sha512
-          minLength: 512
-          maxLength: 512
+          minLength: 128
+          maxLength: 128
     SignUpRequest:
       type: object
       required: [ user_name, user_login, user_password_hash ]
@@ -694,8 +694,8 @@ components:
           type: string
           description: User password hash in SHA512
           format: sha512
-          minLength: 512
-          maxLength: 512
+          minLength: 128
+          maxLength: 128
 
 
     Test:

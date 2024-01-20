@@ -28,9 +28,10 @@ func (component *Component) GenerateAccessToken(
 	userId users.UserId,
 ) (string, error) {
 	now := time.Now()
+	expires := now.Add(component.config.AccessTokenLiveTime)
 	tokenPayload := jwt.MapClaims{
-		"iat": now,
-		"exp": now.Add(component.config.AccessTokenLiveTime),
+		"iat": jwt.NewNumericDate(now),
+		"exp": jwt.NewNumericDate(expires),
 		"sub": strconv.Itoa(userId.Int()),
 		"iss": component.config.Issuer,
 	}
@@ -55,9 +56,10 @@ func (component *Component) GenerateRefreshToken(
 	userId users.UserId,
 ) (string, error) {
 	now := time.Now()
+	expires := now.Add(component.config.RefreshTokenLiveTime)
 	tokenPayload := jwt.MapClaims{
-		"iat": now,
-		"exp": now.Add(component.config.RefreshTokenLiveTime),
+		"iat": jwt.NewNumericDate(now),
+		"exp": jwt.NewNumericDate(expires),
 		"sub": strconv.Itoa(userId.Int()),
 		"iss": component.config.Issuer,
 	}

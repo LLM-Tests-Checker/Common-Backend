@@ -20,7 +20,7 @@ func ReturnErrorWithStatusCode(response http.ResponseWriter, statusCode int32, e
 			ErrorCode:    int(backendErr.Code),
 			ErrorMessage: backendErr.Message,
 		}
-		setErrorResponse(response, apiError, statusCode)
+		setErrorResponse(response, apiError, backendErr.StatusCode)
 	} else {
 		apiError := dto.ApiError{
 			ErrorCode:    int(error2.UnknownError),

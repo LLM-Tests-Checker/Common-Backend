@@ -37,8 +37,15 @@ func (handler *Handler) TestsMy(response http.ResponseWriter, r *http.Request, p
 		return
 	}
 
-	pageNumber := int32(params.PageNumber)
-	pageSize := int32(params.PageSize)
+	pageNumber := int32(0)
+	pageSize := int32(10)
+	if params.PageNumber != nil {
+		pageNumber = int32(*params.PageNumber)
+	}
+	if params.PageSize != nil {
+		pageSize = int32(*params.PageSize)
+	}
+
 	err = validatePagingParameters(pageNumber, pageSize)
 	if err != nil {
 		http2.ReturnError(response, err)

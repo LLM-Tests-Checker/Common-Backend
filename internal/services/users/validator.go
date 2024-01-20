@@ -64,7 +64,7 @@ func (validator *Validator) ValidateLogin(login string) error {
 }
 
 func (validator *Validator) ValidatePasswordHash(passwordHash string) error {
-	const length = 512
+	const length = 128
 	if len(passwordHash) != length {
 		return error2.NewBackendError(
 			error2.InputValidationError,

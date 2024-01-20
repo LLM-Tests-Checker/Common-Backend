@@ -17,6 +17,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/mappers"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/jwt"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
+
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
@@ -69,7 +70,7 @@ func main() {
 		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		BaseContext: func(listener net.Listener) context.Context {
-			return ctx
+			return context.WithValue(ctx, logger2.Logger, logger)
 		},
 	}
 
@@ -163,15 +164,37 @@ func configureRouter(
 	mongoDatabase := mongoClient.Database(databaseName)
 
 	accessTokenLifetime, err := config.GetAccessTokenLifetime()
+	if err != nil {
+		logger.Errorf("config.GetAccessTokenLifetime: %s", err)
+		os.Exit(1)
+	}
 	refreshTokenLifetime, err := config.GetRefreshTokenLifetime()
+	if err != nil {
+		logger.Errorf("config.GetRefreshTokenLifetime: %s", err)
+		os.Exit(1)
+	}
 	accessTokenSecret, err := config.GetAccessTokenSecret()
+	if err != nil {
+		logger.Errorf("config.GetAccessTokenSecret: %s", err)
+		os.Exit(1)
+	}
 	refreshTokenSecret, err := config.GetRefreshTokenSecret()
+	if err != nil {
+		logger.Errorf("config.GetRefreshTokenSecret: %s", err)
+		os.Exit(1)
+	}
+	tokenIssuer, err := config.GetTokenIssuer()
+	if err != nil {
+		logger.Errorf("config.GetTokenIssuer: %s", err)
+		os.Exit(1)
+	}
 
 	jwtConfig := jwt.Config{
 		AccessTokenLiveTime:  accessTokenLifetime,
 		RefreshTokenLiveTime: refreshTokenLifetime,
 		AccessSecretKey:      accessTokenSecret,
 		RefreshSecretKey:     refreshTokenSecret,
+		Issuer:               tokenIssuer,
 	}
 	jwtComponent := jwt.NewJWTComponent(jwtConfig)
 

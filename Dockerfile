@@ -13,6 +13,8 @@ ADD go.sum .
 RUN go mod download
 COPY . .
 RUN go build -o /app/server . cmd/server/main.go
+RUN go build -o /app/worker . cmd/worker/main.go
+RUN go build -o /app/consumer . cmd/consumer/main.go
 
 FROM alpine
 
@@ -21,5 +23,8 @@ COPY --from=builder /usr/share/zoneinfo/America/New_York /usr/share/zoneinfo/Ame
 ENV TZ America/New_York
 WORKDIR /app
 COPY --from=builder /app/server /app/server
+COPY --from=builder /app/worker /app/worker
+COPY --from=builder /app/consumer /app/consumer
 
-CMD [". /server"]
+
+CMD [". /server", ". /worker", ". /consumer"]
