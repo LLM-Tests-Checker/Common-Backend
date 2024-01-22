@@ -27,7 +27,7 @@ func (err BackendError) Error() string {
 	return fmt.Sprintf("[BackendError] Code: %d, Message: %s", err.Code, err.Message)
 }
 
-func Wrap(
+func WrapError(
 	err error,
 	code ErrorCode,
 	message string,

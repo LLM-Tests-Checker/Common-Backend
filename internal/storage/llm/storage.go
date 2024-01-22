@@ -118,7 +118,7 @@ func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 }
 
 func wrapError(err error, message string) error2.BackendError {
-	return error2.Wrap(
+	return error2.WrapError(
 		err,
 		error2.UnknownError,
 		message,

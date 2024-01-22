@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/workers/model_check"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -18,6 +21,34 @@ func main() {
 	logger := configureLogger(ctx)
 
 	logger.Info("Worker is starting")
+
+	worker := configureWorker(logger)
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(ctx)
+
+	go func() {
+		logger.Info("Worker started")
+
+		err := worker.Start(ctx)
+		if err != nil {
+			logger.Errorf("Worker returned error: %s", err)
+			close(done)
+		}
+	}()
+
+	<-done
+	logger.Info("Worker is stopping")
+
+	cancel()
+}
+
+func configureWorker(logger *logrus.Logger) worker {
+	modelCheckWorker := model_check.NewWorker(logger)
+
+	return modelCheckWorker
 }
 
 func configureLogger(ctx context.Context) *logrus.Logger {
@@ -40,4 +71,8 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 	logger.WithField("application", "worker")
 
 	return logger
+}
+
+type worker interface {
+	Start(ctx context.Context) error
 }

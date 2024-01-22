@@ -40,7 +40,7 @@ func (component *Component) GenerateAccessToken(
 	secretKey := []byte(component.config.AccessSecretKey)
 	signedToken, err := token.SignedString(secretKey)
 	if err != nil {
-		backendErr := error2.Wrap(
+		backendErr := error2.WrapError(
 			err,
 			error2.ServerError,
 			"Failed to create access token",
@@ -68,7 +68,7 @@ func (component *Component) GenerateRefreshToken(
 	secretKey := []byte(component.config.RefreshSecretKey)
 	signedToken, err := token.SignedString(secretKey)
 	if err != nil {
-		backendErr := error2.Wrap(
+		backendErr := error2.WrapError(
 			err,
 			error2.ServerError,
 			"Failed to create refresh token",
@@ -99,7 +99,7 @@ func (component *Component) ValidateAndParseAccessToken(
 		return secretKey, nil
 	})
 	if err != nil {
-		backendErr := error2.Wrap(
+		backendErr := error2.WrapError(
 			err,
 			error2.InvalidAccessToken,
 			"Failed to parse access token",
@@ -149,7 +149,7 @@ func (component *Component) ValidateAndParseRefreshToken(
 		return secretKey, nil
 	})
 	if err != nil {
-		backendErr := error2.Wrap(
+		backendErr := error2.WrapError(
 			err,
 			error2.InvalidRefreshToken,
 			"Failed to parse refresh token",
@@ -185,7 +185,7 @@ func (component *Component) ValidateAndParseRefreshToken(
 }
 
 func provideDefaultAccessTokenError(err error) error {
-	return error2.Wrap(
+	return error2.WrapError(
 		err,
 		error2.InvalidAccessToken,
 		"Invalid access token",
@@ -194,7 +194,7 @@ func provideDefaultAccessTokenError(err error) error {
 }
 
 func provideDefaultRefreshTokenError(err error) error {
-	return error2.Wrap(
+	return error2.WrapError(
 		err,
 		error2.InvalidRefreshToken,
 		"Invalid refresh token",

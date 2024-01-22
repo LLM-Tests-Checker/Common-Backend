@@ -209,7 +209,7 @@ func convertRawToModel(rawTest test) tests.Test {
 }
 
 func wrapError(err error, message string) error2.BackendError {
-	return error2.Wrap(
+	return error2.WrapError(
 		err,
 		error2.UnknownError,
 		message,
