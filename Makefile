@@ -17,3 +17,5 @@ build-all:
 launch-server:
 
 launch-consumer:
+
+launch-worker:

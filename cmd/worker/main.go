@@ -8,6 +8,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/test"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/workers/model_check"
 	"github.com/joho/godotenv"
+	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
@@ -30,7 +31,7 @@ func main() {
 
 	logger.Info("Worker is starting")
 
-	worker, mongoClient := configureWorker(ctx, logger, config)
+	worker, mongoClient, kafkaWriter := configureWorker(ctx, logger, config)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -60,6 +61,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = kafkaWriter.Close()
+	if err != nil {
+		logger.Errorf("kafkaWriter.Close: %s", err)
+		os.Exit(1)
+	}
+
 	logger.Infof("Worker stopped")
 }
 
@@ -67,7 +74,7 @@ func configureWorker(
 	ctx context.Context,
 	logger *logrus.Logger,
 	config config2.Worker,
-) (*model_check.Worker, *mongo.Client) {
+) (*model_check.Worker, *mongo.Client, *kafka.Writer) {
 	launchEnvironment, err := config.GetEnvironment()
 	if err != nil {
 		logger.Errorf("config.GetEnvironment: %s", err)
@@ -115,11 +122,13 @@ func configureWorker(
 	testsStorage := test.NewTestsStorage(logger, mongoDatabase)
 	llmStorage := llm2.NewLLMStorage(logger, mongoDatabase)
 
-	llmCheckProducer := llm_check.NewProducer(logger)
+	kafkaWriter := configureKafkaWriter(logger, config)
+
+	llmCheckProducer := llm_check.NewProducer(logger, kafkaWriter)
 
 	modelCheckWorker := model_check.NewWorker(logger, llmStorage, testsStorage, llmCheckProducer)
 
-	return modelCheckWorker, mongoClient
+	return modelCheckWorker, mongoClient, kafkaWriter
 }
 
 func configureLogger(ctx context.Context) *logrus.Logger {
@@ -142,4 +151,38 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 	logger.WithField("application", "worker")
 
 	return logger
+}
+
+func configureKafkaWriter(
+	logger *logrus.Logger,
+	config config2.Worker,
+) *kafka.Writer {
+	topic, err := config.GetKafkaTopicLLMCheck()
+	if err != nil {
+		logger.Errorf("config.GetKafkaTopicLLMCheck: %s", err)
+		os.Exit(1)
+	}
+
+	kafkaUrl, err := config.GetKafkaUrl()
+	if err != nil {
+		logger.Errorf("config.GetKafkaUrl: %s", err)
+		os.Exit(1)
+	}
+
+	writer := kafka.Writer{
+		Addr:                   kafka.TCP(kafkaUrl),
+		Topic:                  topic,
+		MaxAttempts:            3,
+		BatchTimeout:           0,
+		ReadTimeout:            5 * time.Second,
+		WriteTimeout:           5 * time.Second,
+		RequiredAcks:           kafka.RequireOne,
+		Async:                  false,
+		Logger:                 nil,
+		ErrorLogger:            nil,
+		Transport:              nil,
+		AllowAutoTopicCreation: true,
+	}
+
+	return &writer
 }

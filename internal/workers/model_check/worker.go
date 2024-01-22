@@ -153,8 +153,8 @@ func mapModelCheckToEvent(
 	}
 
 	return llm_check.CheckEvent{
-		ModelCheckId:  modelCheck.Identifier,
-		TestId:        modelCheck.TargetTestId,
+		ModelCheckId:  modelCheck.Identifier.String(),
+		TestId:        modelCheck.TargetTestId.String(),
 		TestQuestions: mapQuestionsFn(targetTest.Questions),
 	}
 }

@@ -30,6 +30,7 @@ type Worker interface {
 	GetMongoDatabase() (string, error)
 
 	GetKafkaUrl() (string, error)
+	GetKafkaTopicLLMCheck() (string, error)
 }
 
 type Consumer interface {
