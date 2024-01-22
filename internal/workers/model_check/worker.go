@@ -20,13 +20,13 @@ type Worker struct {
 
 func NewWorker(
 	logger *logrus.Logger,
-	llmService llmStorage,
+	llmStorage llmStorage,
 	testsStorage testsStorage,
 	producer producer,
 ) *Worker {
 	return &Worker{
 		logger:           logger,
-		llmStorage:       llmService,
+		llmStorage:       llmStorage,
 		testsStorage:     testsStorage,
 		producer:         producer,
 		currentSleepTime: 0,

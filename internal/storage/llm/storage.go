@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"net/http"
 	"time"
 )
@@ -63,6 +64,43 @@ func (storage *Storage) GetLLMChecksByTestId(
 	return resultModelChecks, nil
 }
 
+func (storage *Storage) GetNotStartedModelChecks(
+	ctx context.Context,
+	maxCount int32,
+) ([]llm.ModelCheck, error) {
+	limit := int64(maxCount)
+	options := options2.FindOptions{
+		Limit: &limit,
+	}
+	options.SetSort(bson.D{
+		{modelCheckFieldCreatedAt, 1},
+	})
+
+	cursor, err := storage.collection.Find(
+		ctx,
+		bson.M{
+			modelCheckFieldStatus: llm.StatusNotStarted,
+		},
+		&options,
+	)
+	if err != nil {
+		return nil, wrapError(err, "Can't get not started model checks")
+	}
+
+	rawModelChecks := make([]modelCheck, 0, maxCount)
+	err = cursor.All(ctx, &rawModelChecks)
+	if err != nil {
+		return nil, wrapError(err, "Can't get not started model checks")
+	}
+
+	resultModelChecks := make([]llm.ModelCheck, len(rawModelChecks))
+	for i := range rawModelChecks {
+		resultModelChecks[i] = convertRawToModel(rawModelChecks[i])
+	}
+
+	return resultModelChecks, nil
+}
+
 func (storage *Storage) InsertNotStartedLLMCheck(
 	ctx context.Context,
 	modelSlug llm.ModelSlug,
@@ -91,6 +129,44 @@ func (storage *Storage) InsertNotStartedLLMCheck(
 	insertedModelCheck := convertRawToModel(rawModelCheck)
 
 	return &insertedModelCheck, nil
+}
+
+func (storage *Storage) UpdateModelChecksStatus(
+	ctx context.Context,
+	modelCheckIds []llm.ModelCheckId,
+	newStatus llm.CheckStatus,
+) error {
+	modelCheckIdsString := make([]string, len(modelCheckIds))
+	for i := range modelCheckIds {
+		modelCheckIdsString[i] = modelCheckIds[i].String()
+	}
+
+	updateResult, err := storage.collection.UpdateMany(
+		ctx,
+		bson.D{
+			{
+				modelCheckFieldIdentifier,
+				bson.M{
+					"$in": modelCheckIdsString,
+				},
+			},
+		},
+		bson.D{
+			{
+				"$set",
+				bson.D{
+					{modelCheckFieldStatus, newStatus},
+				},
+			},
+		},
+	)
+	if err != nil {
+		return wrapError(err, "Can't update model checks status")
+	}
+
+	storage.logger.Debugf("Updated model checks status count: %d", updateResult.ModifiedCount)
+
+	return nil
 }
 
 func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {

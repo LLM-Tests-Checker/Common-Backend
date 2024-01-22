@@ -2,12 +2,19 @@ package main
 
 import (
 	"context"
+	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/producers/llm_check"
+	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/test"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/workers/model_check"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	options2 "go.mongodb.org/mongo-driver/mongo/options"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -19,10 +26,11 @@ func main() {
 
 	ctx := context.Background()
 	logger := configureLogger(ctx)
+	config := config2.ProvideWorkerConfig()
 
 	logger.Info("Worker is starting")
 
-	worker := configureWorker(logger)
+	worker, mongoClient := configureWorker(ctx, logger, config)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -43,12 +51,75 @@ func main() {
 	logger.Info("Worker is stopping")
 
 	cancel()
+
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+
+	err = mongoClient.Disconnect(ctx)
+	if err != nil {
+		logger.Errorf("mongoClient.Disconnect: %s", err)
+		os.Exit(1)
+	}
+
+	logger.Infof("Worker stopped")
 }
 
-func configureWorker(logger *logrus.Logger) worker {
-	modelCheckWorker := model_check.NewWorker(logger)
+func configureWorker(
+	ctx context.Context,
+	logger *logrus.Logger,
+	config config2.Worker,
+) (*model_check.Worker, *mongo.Client) {
+	launchEnvironment, err := config.GetEnvironment()
+	if err != nil {
+		logger.Errorf("config.GetEnvironment: %s", err)
+		os.Exit(1)
+	}
 
-	return modelCheckWorker
+	mongoUrl, err := config.GetMongoUrl()
+	if err != nil {
+		logger.Errorf("config.GetMongoUrl: %s", err)
+		os.Exit(1)
+	}
+
+	mongodbLogLevel := options2.LogLevelInfo
+	if launchEnvironment == config2.EnvironmentLocal {
+		mongodbLogLevel = options2.LogLevelDebug
+	}
+
+	mongoLogOptions := options2.Logger().SetComponentLevel(options2.LogComponentAll, mongodbLogLevel)
+	options := options2.Client().
+		ApplyURI(mongoUrl).
+		SetTimeout(time.Second).
+		SetAppName("worker").
+		SetConnectTimeout(10 * time.Second).
+		SetMaxConnecting(10).
+		SetMinPoolSize(5).
+		SetRetryReads(true).
+		SetMaxConnIdleTime(30 * time.Second).
+		SetServerSelectionTimeout(10 * time.Second).
+		SetLoggerOptions(mongoLogOptions)
+
+	mongoClient, err := mongo.Connect(ctx, options)
+	if err != nil {
+		logger.Errorf("Can't connect to mongo: %s", err)
+		os.Exit(1)
+	}
+
+	databaseName, err := config.GetMongoDatabase()
+	if err != nil {
+		logger.Errorf("config.GetMongoDatabase: %s", err)
+		os.Exit(1)
+	}
+
+	mongoDatabase := mongoClient.Database(databaseName)
+
+	testsStorage := test.NewTestsStorage(logger, mongoDatabase)
+	llmStorage := llm2.NewLLMStorage(logger, mongoDatabase)
+
+	llmCheckProducer := llm_check.NewProducer(logger)
+
+	modelCheckWorker := model_check.NewWorker(logger, llmStorage, testsStorage, llmCheckProducer)
+
+	return modelCheckWorker, mongoClient
 }
 
 func configureLogger(ctx context.Context) *logrus.Logger {
@@ -71,8 +142,4 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 	logger.WithField("application", "worker")
 
 	return logger
-}
-
-type worker interface {
-	Start(ctx context.Context) error
 }

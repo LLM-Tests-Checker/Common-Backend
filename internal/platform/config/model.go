@@ -24,6 +24,8 @@ type Server interface {
 }
 
 type Worker interface {
+	GetEnvironment() (Environment, error)
+
 	GetMongoUrl() (string, error)
 	GetMongoDatabase() (string, error)
 

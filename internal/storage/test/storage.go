@@ -60,6 +60,41 @@ func (storage *Storage) GetTestById(
 	return &targetTest, nil
 }
 
+func (storage *Storage) GetTestsByIds(
+	ctx context.Context,
+	testsIds []tests.TestId,
+) ([]tests.Test, error) {
+	testsIdsString := make([]string, len(testsIds))
+	for i := range testsIds {
+		testsIdsString[i] = testsIds[i].String()
+	}
+
+	cursor, err := storage.collection.Find(
+		ctx,
+		bson.M{
+			testFieldIdentifier: bson.M{
+				"$in": testsIdsString,
+			},
+		},
+	)
+	if err != nil {
+		return nil, wrapError(err, "Can't get tests by id")
+	}
+
+	rawTests := make([]test, 0, len(testsIds))
+	err = cursor.All(ctx, &rawTests)
+	if err != nil {
+		return nil, wrapError(err, "Can't get tests by id")
+	}
+
+	resultTests := make([]tests.Test, len(rawTests))
+	for i := range rawTests {
+		resultTests[i] = convertRawToModel(rawTests[i])
+	}
+
+	return resultTests, nil
+}
+
 func (storage *Storage) GetTestsByAuthorId(
 	ctx context.Context,
 	authorId users.UserId,

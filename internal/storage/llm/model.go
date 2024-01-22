@@ -1,7 +1,10 @@
 package llm
 
 const (
+	modelCheckFieldIdentifier   = "identifier"
 	modelCheckFieldTargetTestId = "target_test_id"
+	modelCheckFieldCreatedAt    = "created_at"
+	modelCheckFieldStatus       = "status"
 )
 
 type modelCheck struct {

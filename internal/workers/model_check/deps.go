@@ -10,7 +10,7 @@ import (
 type testsStorage interface {
 	GetTestsByIds(
 		ctx context.Context,
-		testIds []tests.TestId,
+		testsIds []tests.TestId,
 	) ([]tests.Test, error)
 }
 
