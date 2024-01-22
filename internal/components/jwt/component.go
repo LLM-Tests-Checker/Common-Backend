@@ -1,7 +1,7 @@
 package jwt
 
 import (
-	"errors"
+	"fmt"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	"github.com/golang-jwt/jwt/v5"
@@ -86,12 +86,15 @@ func (component *Component) ValidateAndParseAccessToken(
 	options := []jwt.ParserOption{
 		jwt.WithIssuedAt(),
 		jwt.WithIssuer(component.config.Issuer),
-		jwt.WithExpirationRequired(),
 	}
 
 	parser := jwt.NewParser(options...)
 
 	token, err := parser.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
 		secretKey := []byte(component.config.AccessSecretKey)
 		return secretKey, nil
 	})
@@ -103,14 +106,6 @@ func (component *Component) ValidateAndParseAccessToken(
 			http.StatusUnauthorized,
 		)
 		return 0, backendErr
-	}
-
-	if !token.Valid {
-		return 0, provideDefaultAccessTokenError(errors.New("invalid token"))
-	}
-
-	if token.Method != tokenSigningMethod {
-		return 0, provideDefaultAccessTokenError(errors.New("invalid signing method"))
 	}
 
 	expiredAt, err := token.Claims.GetExpirationTime()
@@ -145,7 +140,6 @@ func (component *Component) ValidateAndParseRefreshToken(
 	options := []jwt.ParserOption{
 		jwt.WithIssuedAt(),
 		jwt.WithIssuer(component.config.Issuer),
-		jwt.WithExpirationRequired(),
 	}
 
 	parser := jwt.NewParser(options...)
@@ -162,14 +156,6 @@ func (component *Component) ValidateAndParseRefreshToken(
 			http.StatusUnauthorized,
 		)
 		return 0, backendErr
-	}
-
-	if !token.Valid {
-		return 0, provideDefaultRefreshTokenError(errors.New("invalid token"))
-	}
-
-	if token.Method != tokenSigningMethod {
-		return 0, provideDefaultRefreshTokenError(errors.New("invalid signing method"))
 	}
 
 	expiredAt, err := token.Claims.GetExpirationTime()

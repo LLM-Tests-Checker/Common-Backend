@@ -53,7 +53,7 @@ func mapModelResultToResponse(models []llm.ModelTestResult) dto.GetLLMCheckResul
 	mapAnswersFn := func(modelAnswers []llm.ModelTestAnswer) []dto.GetLLMCheckResultLLMAnswer {
 		result := make([]dto.GetLLMCheckResultLLMAnswer, len(modelAnswers))
 
-		for i := range models {
+		for i := range modelAnswers {
 			result[i] = dto.GetLLMCheckResultLLMAnswer{
 				QuestionNumber:       int(modelAnswers[i].QuestionNumber),
 				SelectedAnswerNumber: int(modelAnswers[i].SelectedAnswerNumber),

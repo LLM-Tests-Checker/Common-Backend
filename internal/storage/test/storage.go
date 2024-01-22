@@ -157,7 +157,7 @@ func (storage *Storage) DeleteTestById(
 	deleteResult, err := storage.collection.DeleteOne(
 		ctx,
 		bson.M{
-			testFieldIdentifier: testId,
+			testFieldIdentifier: testId.String(),
 		},
 	)
 	if err != nil {

@@ -128,6 +128,14 @@ func (service *Service) LaunchModelCheck(
 		)
 		return nil, err
 	}
+	if test.AuthorId != userId {
+		err := error2.NewBackendError(
+			error2.NotOwnerError,
+			"Not your test",
+			http.StatusForbidden,
+		)
+		return nil, err
+	}
 
 	modelCheck, err := service.llmStorage.InsertNotStartedLLMCheck(ctx, modelSlug, testId, userId)
 	if err != nil {

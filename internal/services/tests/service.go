@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	"net/http"
@@ -81,6 +82,13 @@ func (service *Service) GetTestById(
 	test, err := service.testsStorage.GetTestById(ctx, testId)
 	if err != nil {
 		return nil, err
+	}
+	if test == nil {
+		return nil, error2.NewBackendError(
+			error2.TestNotFound,
+			fmt.Sprintf("Test with id %s not found", testId.String()),
+			http.StatusBadRequest,
+		)
 	}
 
 	if test.AuthorId != userId {
