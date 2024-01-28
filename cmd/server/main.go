@@ -257,11 +257,13 @@ func configureLogger(
 		os.Exit(1)
 	}
 
-	logger.WithContext(ctx)
+	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
-	logger.WithField("environment", launchEnvironment)
-	logger.WithField("application", "server")
+	logger = logger.
+		WithField("environment", launchEnvironment).
+		WithField("application", "server").
+		Logger
 
 	return logger
 }

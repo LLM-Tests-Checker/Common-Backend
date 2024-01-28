@@ -34,8 +34,12 @@ type Worker interface {
 }
 
 type Consumer interface {
+	GetEnvironment() (Environment, error)
+
 	GetMongoUrl() (string, error)
 	GetMongoDatabase() (string, error)
 
 	GetKafkaUrl() (string, error)
+	GetKafkaTopicLLMResult() (string, error)
+	GetConsumerGroup() (string, error)
 }

@@ -5,6 +5,7 @@ const (
 	modelCheckFieldTargetTestId = "target_test_id"
 	modelCheckFieldCreatedAt    = "created_at"
 	modelCheckFieldStatus       = "status"
+	modelCheckFieldAnswers      = "answers"
 )
 
 type modelCheck struct {

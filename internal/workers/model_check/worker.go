@@ -46,7 +46,7 @@ func (worker *Worker) Start(ctx context.Context) error {
 				continue
 			}
 
-			worker.logger.Infof("Model Checks handled count: %d", handledChecksCount)
+			worker.logger.Infof("Model checks handled count: %d", handledChecksCount)
 
 			worker.sleep(handledChecksCount, nil)
 		}
@@ -106,7 +106,7 @@ func (worker *Worker) work(ctx context.Context) (int32, error) {
 func (worker *Worker) sleep(handledChecksCount int32, err error) {
 	const maxSleepDuration = 5 * time.Second
 	const minSleepDuration time.Duration = 0
-	const sleepStep time.Duration = 250 * time.Millisecond
+	const sleepStep = 250 * time.Millisecond
 
 	if err != nil {
 		worker.currentSleepTime = maxSleepDuration

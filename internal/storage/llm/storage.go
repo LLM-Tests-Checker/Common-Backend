@@ -169,6 +169,52 @@ func (storage *Storage) UpdateModelChecksStatus(
 	return nil
 }
 
+func (storage *Storage) SetLLMCheckCompleted(
+	ctx context.Context,
+	checkId llm.ModelCheckId,
+	modelAnswers []llm.ModelTestAnswer,
+) error {
+	checkIdString := checkId.String()
+	rawAnswers := make([]modelAnswer, len(modelAnswers))
+	for i := range modelAnswers {
+		rawAnswers[i] = modelAnswer{
+			QuestionNumber:       modelAnswers[i].QuestionNumber,
+			SelectedAnswerNumber: modelAnswers[i].SelectedAnswerNumber,
+		}
+	}
+
+	updateResult, err := storage.collection.UpdateOne(
+		ctx,
+		bson.D{
+			{
+				modelCheckFieldIdentifier,
+				checkIdString,
+			},
+		},
+		bson.D{
+			{
+				"$set",
+				bson.D{
+					{modelCheckFieldStatus, llm.StatusCompleted},
+				},
+			},
+			{
+				"$set",
+				bson.D{
+					{modelCheckFieldAnswers, rawAnswers},
+				},
+			},
+		},
+	)
+	if err != nil {
+		return wrapError(err, "Can't set llm check completed")
+	}
+
+	storage.logger.Debugf("Set completed model checks count: %d", updateResult.ModifiedCount)
+
+	return nil
+}
+
 func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 	mapModelAnswersFn := func(rawAnswers []modelAnswer) []llm.ModelTestAnswer {
 		result := make([]llm.ModelTestAnswer, len(rawAnswers))

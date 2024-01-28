@@ -147,11 +147,13 @@ func configureLogger(
 		os.Exit(1)
 	}
 
-	logger.WithContext(ctx)
+	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
-	logger.WithField("environment", launchEnvironment)
-	logger.WithField("application", "worker")
+	logger = logger.
+		WithField("environment", launchEnvironment).
+		WithField("application", "worker").
+		Logger
 
 	return logger
 }
@@ -180,9 +182,8 @@ func configureKafkaWriter(
 		WriteTimeout:           2 * time.Second,
 		RequiredAcks:           kafka.RequireOne,
 		Async:                  false,
-		Logger:                 nil,
-		ErrorLogger:            nil,
-		Transport:              nil,
+		Logger:                 kafka.LoggerFunc(logger.Infof),
+		ErrorLogger:            kafka.LoggerFunc(logger.Errorf),
 		AllowAutoTopicCreation: true,
 	}
 
