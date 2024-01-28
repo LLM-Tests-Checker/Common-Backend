@@ -1,5 +1,8 @@
 package llm_check
 
+const CheckEventMessageVersionHeader = "Check-Event-Version"
+const CheckEventVersion = "1.0.0"
+
 type CheckEvent struct {
 	ModelCheckId  string               `json:"model_check_id"`
 	TestId        string               `json:"test_id"`

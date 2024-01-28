@@ -25,9 +25,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx := context.Background()
-	logger := configureLogger(ctx)
 	config := config2.ProvideWorkerConfig()
+	ctx := context.Background()
+	logger := configureLogger(ctx, config)
 
 	logger.Info("Worker is starting")
 
@@ -131,16 +131,19 @@ func configureWorker(
 	return modelCheckWorker, mongoClient, kafkaWriter
 }
 
-func configureLogger(ctx context.Context) *logrus.Logger {
+func configureLogger(
+	ctx context.Context,
+	config config2.Worker,
+) *logrus.Logger {
 	logger := logrus.New()
 
 	formatter := new(logrus.JSONFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05.000"
 	formatter.PrettyPrint = false
 
-	launchEnvironment, exists := os.LookupEnv("ENVIRONMENT")
-	if !exists {
-		logger.Errorf("ENVIRONMENT enviroment not provided")
+	launchEnvironment, err := config.GetEnvironment()
+	if err != nil {
+		logger.Errorf("config.GetEnvironemnt: %s", err)
 		os.Exit(1)
 	}
 
@@ -172,10 +175,9 @@ func configureKafkaWriter(
 	writer := kafka.Writer{
 		Addr:                   kafka.TCP(kafkaUrl),
 		Topic:                  topic,
-		MaxAttempts:            3,
-		BatchTimeout:           0,
-		ReadTimeout:            5 * time.Second,
-		WriteTimeout:           5 * time.Second,
+		MaxAttempts:            2,
+		ReadTimeout:            2 * time.Second,
+		WriteTimeout:           2 * time.Second,
 		RequiredAcks:           kafka.RequireOne,
 		Async:                  false,
 		Logger:                 nil,

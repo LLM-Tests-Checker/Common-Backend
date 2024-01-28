@@ -47,5 +47,11 @@ func convertEventModelToMessage(event CheckEvent) kafka.Message {
 	return kafka.Message{
 		Key:   messageKey,
 		Value: messageValue,
+		Headers: []kafka.Header{
+			{
+				Key:   CheckEventMessageVersionHeader,
+				Value: []byte(CheckEventVersion),
+			},
+		},
 	}
 }
