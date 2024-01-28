@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -99,12 +100,22 @@ func (component *Component) ValidateAndParseAccessToken(
 		return secretKey, nil
 	})
 	if err != nil {
-		backendErr := error2.WrapError(
-			err,
-			error2.InvalidAccessToken,
-			"Failed to parse access token",
-			http.StatusUnauthorized,
-		)
+		var backendErr = error2.BackendError{}
+		if strings.Contains(err.Error(), "token is expired") {
+			backendErr = error2.WrapError(
+				err,
+				error2.AccessTokenExpired,
+				"Access token expired",
+				http.StatusUnauthorized,
+			)
+		} else {
+			backendErr = error2.WrapError(
+				err,
+				error2.InvalidAccessToken,
+				"Failed to parse access token",
+				http.StatusUnauthorized,
+			)
+		}
 		return 0, backendErr
 	}
 
@@ -149,12 +160,22 @@ func (component *Component) ValidateAndParseRefreshToken(
 		return secretKey, nil
 	})
 	if err != nil {
-		backendErr := error2.WrapError(
-			err,
-			error2.InvalidRefreshToken,
-			"Failed to parse refresh token",
-			http.StatusUnauthorized,
-		)
+		var backendErr = error2.BackendError{}
+		if strings.Contains(err.Error(), "token is expired") {
+			backendErr = error2.WrapError(
+				err,
+				error2.RefreshTokenExpired,
+				"Refresh token expired",
+				http.StatusUnauthorized,
+			)
+		} else {
+			backendErr = error2.WrapError(
+				err,
+				error2.InvalidRefreshToken,
+				"Failed to parse refresh token",
+				http.StatusUnauthorized,
+			)
+		}
 		return 0, backendErr
 	}
 
