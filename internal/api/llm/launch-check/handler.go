@@ -72,6 +72,8 @@ func mapDtoSlugToModelSlug(dtoSlug dto.LaunchLLMCheckRequestLlmSlug) (llm.ModelS
 		return llm.ModelGPT3, nil
 	case dto.YandexGPT2:
 		return llm.ModelYandexGPT, nil
+	case dto.Dummy:
+		return llm.Dummy, nil
 	}
 
 	return "", error2.NewBackendError(

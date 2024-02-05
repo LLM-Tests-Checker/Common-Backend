@@ -136,6 +136,7 @@ func (storage *Storage) UpdateModelChecksStatus(
 	modelCheckIds []llm.ModelCheckId,
 	newStatus llm.CheckStatus,
 ) error {
+	now := time.Now().Format(time.RFC3339)
 	modelCheckIdsString := make([]string, len(modelCheckIds))
 	for i := range modelCheckIds {
 		modelCheckIdsString[i] = modelCheckIds[i].String()
@@ -156,6 +157,7 @@ func (storage *Storage) UpdateModelChecksStatus(
 				"$set",
 				bson.D{
 					{modelCheckFieldStatus, newStatus},
+					{modelCheckFieldUpdatedAt, now},
 				},
 			},
 		},
@@ -175,6 +177,7 @@ func (storage *Storage) SetLLMCheckCompleted(
 	modelAnswers []llm.ModelTestAnswer,
 ) error {
 	checkIdString := checkId.String()
+	now := time.Now().Format(time.RFC3339)
 	rawAnswers := make([]modelAnswer, len(modelAnswers))
 	for i := range modelAnswers {
 		rawAnswers[i] = modelAnswer{
@@ -196,11 +199,7 @@ func (storage *Storage) SetLLMCheckCompleted(
 				"$set",
 				bson.D{
 					{modelCheckFieldStatus, llm.StatusCompleted},
-				},
-			},
-			{
-				"$set",
-				bson.D{
+					{modelCheckFieldUpdatedAt, now},
 					{modelCheckFieldAnswers, rawAnswers},
 				},
 			},
@@ -227,6 +226,15 @@ func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 		return result
 	}
 
+	createdAt, err := time.Parse(rawModelCheck.CreatedAt, time.RFC3339)
+	if err != nil {
+		panic(err)
+	}
+	updatedAt, err := time.Parse(rawModelCheck.UpdatedAt, time.RFC3339)
+	if err != nil {
+		panic(err)
+	}
+
 	return llm.ModelCheck{
 		Identifier:   uuid.MustParse(rawModelCheck.Identifier),
 		ModelSlug:    rawModelCheck.Slug,
@@ -234,8 +242,8 @@ func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 		AuthorId:     users.UserId(rawModelCheck.AuthorId),
 		Status:       rawModelCheck.Status,
 		Answers:      mapModelAnswersFn(rawModelCheck.Answers),
-		CreatedAt:    time.Time{},
-		UpdatedAt:    time.Time{},
+		CreatedAt:    createdAt,
+		UpdatedAt:    updatedAt,
 	}
 }
 

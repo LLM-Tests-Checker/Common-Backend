@@ -4,6 +4,7 @@ const (
 	modelCheckFieldIdentifier   = "identifier"
 	modelCheckFieldTargetTestId = "target_test_id"
 	modelCheckFieldCreatedAt    = "created_at"
+	modelCheckFieldUpdatedAt    = "updated_at"
 	modelCheckFieldStatus       = "status"
 	modelCheckFieldAnswers      = "answers"
 )

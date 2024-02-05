@@ -17,6 +17,7 @@ type CheckStatus = string
 const (
 	ModelGPT3      ModelSlug = "gpt3"
 	ModelYandexGPT ModelSlug = "yandex_gpt"
+	Dummy          ModelSlug = "dummy_model"
 )
 
 const (
