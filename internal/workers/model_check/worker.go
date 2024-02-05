@@ -152,9 +152,16 @@ func mapModelCheckToEvent(
 		return result
 	}
 
+	eventTest := llm_check.CheckEventTest{
+		Id:          targetTest.Identifier.String(),
+		Name:        targetTest.Name,
+		Description: targetTest.Description,
+		Questions:   mapQuestionsFn(targetTest.Questions),
+	}
+
 	return llm_check.CheckEvent{
-		ModelCheckId:  modelCheck.Identifier.String(),
-		TestId:        modelCheck.TargetTestId.String(),
-		TestQuestions: mapQuestionsFn(targetTest.Questions),
+		ModelCheckId: modelCheck.Identifier.String(),
+		LLMSlug:      modelCheck.ModelSlug,
+		TargetTest:   eventTest,
 	}
 }
