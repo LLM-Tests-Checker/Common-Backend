@@ -17,6 +17,8 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/mappers"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/jwt"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/metrics"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
@@ -61,6 +63,8 @@ func main() {
 	}
 
 	router, mongoClient := configureRouter(logger, ctx, config)
+
+	router.Handle("/metrics", promhttp.Handler())
 
 	server := http.Server{
 		Addr:              fmt.Sprintf("localhost:%s", serverPort),
@@ -115,6 +119,7 @@ func configureRouter(
 ) (*chi.Mux, *mongo.Client) {
 	router := chi.NewRouter()
 
+	router.Use(metrics.CommonMetricsMiddleware)
 	router.Use(logger2.LoggingMiddleware)
 	router.Use(logger2.InfrastructureMiddleware)
 	router.Use(middleware.Recoverer)

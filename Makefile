@@ -21,7 +21,9 @@ lint:
 launch-server:
 	go run ./cmd/server/main.go
 launch-consumer:
-	go run ./cmd/consumer/main.go
+	go run ./cmd/consumer/llm_result/main.go
 
 launch-worker:
-	go run ./cmd/worker/main.go
+	go run ./cmd/worker/launch_llm_check/main.go
+	go run ./cmd/worker/drop_old_in_progress_llm_check/main.go
+

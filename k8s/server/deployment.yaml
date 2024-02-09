@@ -31,13 +31,22 @@ spec:
           image: $REPOSITORY_NAME:$IMAGE_TAG
           livenessProbe:
             httpGet:
-              port:
+              port: 8181
+              path: /metrics
+            initialDelaySeconds: 10
+            periodSeconds: 5
           readinessProbe:
             httpGet:
-              port:
+              port: 8181
+              path: /metrics
+            initialDelaySeconds: 10
+            periodSeconds: 5
           startupProbe:
             httpGet:
-              port:
+              port: 8181
+              path: /metrics
+            failureThreshold: 30
+            periodSeconds: 10
           ports:
-            - containerPort:
-
+            - containerPort: 8181
+              hostPort: 8181
