@@ -107,7 +107,6 @@ func (storage *Storage) InsertNotStartedLLMCheck(
 	testId tests.TestId,
 	authorId users.UserId,
 ) (*llm.ModelCheck, error) {
-	now := time.Now().Format(time.RFC3339)
 	rawModelCheck := modelCheck{
 		Identifier:   uuid.New().String(),
 		Slug:         modelSlug,
@@ -115,8 +114,8 @@ func (storage *Storage) InsertNotStartedLLMCheck(
 		AuthorId:     authorId.Int32(),
 		Status:       llm.StatusNotStarted,
 		Answers:      nil,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		CreatedAt:    toDatabaseTimeFormat(time.Now()),
+		UpdatedAt:    toDatabaseTimeFormat(time.Now()),
 	}
 
 	insertResult, err := storage.collection.InsertOne(ctx, rawModelCheck)
@@ -136,7 +135,7 @@ func (storage *Storage) UpdateModelChecksStatus(
 	modelCheckIds []llm.ModelCheckId,
 	newStatus llm.CheckStatus,
 ) error {
-	now := time.Now().Format(time.RFC3339)
+	now := toDatabaseTimeFormat(time.Now())
 	modelCheckIdsString := make([]string, len(modelCheckIds))
 	for i := range modelCheckIds {
 		modelCheckIdsString[i] = modelCheckIds[i].String()
@@ -177,7 +176,7 @@ func (storage *Storage) SetLLMCheckCompleted(
 	modelAnswers []llm.ModelTestAnswer,
 ) error {
 	checkIdString := checkId.String()
-	now := time.Now().Format(time.RFC3339)
+	now := toDatabaseTimeFormat(time.Now())
 	rawAnswers := make([]modelAnswer, len(modelAnswers))
 	for i := range modelAnswers {
 		rawAnswers[i] = modelAnswer{
@@ -214,6 +213,54 @@ func (storage *Storage) SetLLMCheckCompleted(
 	return nil
 }
 
+func (storage *Storage) GetInProgressModelChecks(
+	ctx context.Context,
+	updatedLaterThen time.Time,
+	maxCount int32,
+) ([]llm.ModelCheck, error) {
+	updatedAtLess := toDatabaseTimeFormat(updatedLaterThen)
+	limit := int64(maxCount)
+	options := options2.FindOptions{
+		Limit: &limit,
+	}
+	options.SetSort(bson.D{
+		{modelCheckFieldUpdatedAt, 1},
+	})
+
+	cursor, err := storage.collection.Find(
+		ctx,
+		bson.D{
+			{
+				modelCheckFieldStatus,
+				llm.StatusInProgress,
+			},
+			{
+				modelCheckFieldUpdatedAt,
+				bson.M{
+					"$lt": updatedAtLess,
+				},
+			},
+		},
+		&options,
+	)
+	if err != nil {
+		return nil, wrapError(err, "Can't get in progress model checks with updated at less then")
+	}
+
+	rawModelChecks := make([]modelCheck, 0, maxCount)
+	err = cursor.All(ctx, &rawModelChecks)
+	if err != nil {
+		return nil, wrapError(err, "Can't get not started model checks")
+	}
+
+	resultModelChecks := make([]llm.ModelCheck, len(rawModelChecks))
+	for i := range rawModelChecks {
+		resultModelChecks[i] = convertRawToModel(rawModelChecks[i])
+	}
+
+	return resultModelChecks, nil
+}
+
 func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 	mapModelAnswersFn := func(rawAnswers []modelAnswer) []llm.ModelTestAnswer {
 		result := make([]llm.ModelTestAnswer, len(rawAnswers))
@@ -226,14 +273,8 @@ func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 		return result
 	}
 
-	createdAt, err := time.Parse(rawModelCheck.CreatedAt, time.RFC3339)
-	if err != nil {
-		panic(err)
-	}
-	updatedAt, err := time.Parse(rawModelCheck.UpdatedAt, time.RFC3339)
-	if err != nil {
-		panic(err)
-	}
+	createdAt := fromDatabaseTimeFormat(rawModelCheck.CreatedAt)
+	updatedAt := fromDatabaseTimeFormat(rawModelCheck.UpdatedAt)
 
 	return llm.ModelCheck{
 		Identifier:   uuid.MustParse(rawModelCheck.Identifier),
@@ -245,6 +286,14 @@ func convertRawToModel(rawModelCheck modelCheck) llm.ModelCheck {
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
 	}
+}
+
+func toDatabaseTimeFormat(value time.Time) int64 {
+	return value.UnixMilli()
+}
+
+func fromDatabaseTimeFormat(value int64) time.Time {
+	return time.UnixMilli(value)
 }
 
 func wrapError(err error, message string) error2.BackendError {

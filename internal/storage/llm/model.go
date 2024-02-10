@@ -16,8 +16,8 @@ type modelCheck struct {
 	AuthorId     int32         `bson:"author_id"`
 	Status       string        `bson:"status"`
 	Answers      []modelAnswer `bson:"answers,omitempty"`
-	CreatedAt    string        `bson:"created_at"`
-	UpdatedAt    string        `bson:"updated_at"`
+	CreatedAt    int64         `bson:"created_at"`
+	UpdatedAt    int64         `bson:"updated_at"`
 }
 
 type modelAnswer struct {

@@ -264,7 +264,6 @@ func configureLogger(
 		os.Exit(1)
 	}
 
-	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
 
@@ -273,7 +272,7 @@ func configureLogger(
 			"environment": launchEnvironment,
 			"application": applicationName,
 		},
-	)
+	).WithContext(ctx)
 }
 
 type server struct {

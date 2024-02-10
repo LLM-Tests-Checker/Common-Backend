@@ -30,7 +30,7 @@ func main() {
 	ctx := context.Background()
 	logger := configureLogger(ctx)
 
-	logger.Info("ConsumerLLMResult is starting")
+	logger.Info("Consumer is starting")
 
 	consumer, mongoClient, kafkaReader := configureConsumer(ctx, logger, config)
 
@@ -40,17 +40,17 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-		logger.Info("ConsumerLLMResult started")
+		logger.Info("Consumer started")
 
 		err := consumer.Start(ctx)
 		if err != nil {
-			logger.Errorf("ConsumerLLMResult returned error: %s", err)
+			logger.Errorf("Consumer returned error: %s", err)
 			close(done)
 		}
 	}()
 
 	<-done
-	logger.Info("ConsumerLLMResult is stopping")
+	logger.Info("Consumer is stopping")
 
 	cancel()
 
@@ -68,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Infof("WorkerLaunchLLMCheck stopped")
+	logger.Infof("Consumer stopped")
 }
 
 func configureConsumer(
@@ -141,7 +141,6 @@ func configureLogger(ctx context.Context) logger2.Logger {
 		os.Exit(1)
 	}
 
-	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
 
@@ -150,7 +149,7 @@ func configureLogger(ctx context.Context) logger2.Logger {
 			"environment": launchEnvironment,
 			"application": applicationName,
 		},
-	)
+	).WithContext(ctx)
 }
 
 func configureKafkaReader(

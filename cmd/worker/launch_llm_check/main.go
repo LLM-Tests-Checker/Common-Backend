@@ -32,7 +32,7 @@ func main() {
 	ctx := context.Background()
 	logger := configureLogger(ctx, config)
 
-	logger.Info("WorkerLaunchLLMCheck is starting")
+	logger.Info("Worker is starting")
 
 	worker, mongoClient, kafkaWriter := configureWorker(ctx, logger, config)
 
@@ -42,17 +42,17 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-		logger.Info("WorkerLaunchLLMCheck started")
+		logger.Info("Worker started")
 
 		err := worker.Start(ctx)
 		if err != nil {
-			logger.Errorf("WorkerLaunchLLMCheck returned error: %s", err)
+			logger.Errorf("Worker returned error: %s", err)
 			close(done)
 		}
 	}()
 
 	<-done
-	logger.Info("WorkerLaunchLLMCheck is stopping")
+	logger.Info("Worker is stopping")
 
 	cancel()
 
@@ -70,7 +70,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Infof("WorkerLaunchLLMCheck stopped")
+	logger.Infof("Worker stopped")
 }
 
 func configureWorker(
@@ -150,7 +150,6 @@ func configureLogger(
 		os.Exit(1)
 	}
 
-	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
 
@@ -159,7 +158,7 @@ func configureLogger(
 			"environment": launchEnvironment,
 			"application": applicationName,
 		},
-	)
+	).WithContext(ctx)
 }
 
 func configureKafkaWriter(

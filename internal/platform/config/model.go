@@ -35,6 +35,9 @@ type WorkerLaunchLLMCheck interface {
 
 type WorkerDropOldInProgressLLMCheck interface {
 	GetEnvironment() (Environment, error)
+
+	GetMongoUrl() (string, error)
+	GetMongoDatabase() (string, error)
 }
 
 type ConsumerLLMResult interface {
