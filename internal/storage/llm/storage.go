@@ -3,11 +3,11 @@ package llm
 import (
 	"context"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
@@ -18,12 +18,12 @@ import (
 const llmModelCheckCollectionName = "model_check"
 
 type Storage struct {
-	logger     *logrus.Logger
+	logger     logger.Logger
 	collection *mongo.Collection
 }
 
 func NewLLMStorage(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	database *mongo.Database,
 ) *Storage {
 	return &Storage{

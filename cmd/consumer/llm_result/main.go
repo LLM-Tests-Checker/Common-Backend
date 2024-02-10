@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/consumers/llm_result"
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
+	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
 	"github.com/joho/godotenv"
 	"github.com/segmentio/kafka-go"
@@ -16,6 +17,8 @@ import (
 	"time"
 )
 
+const applicationName = "consumer_llm_result"
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -27,7 +30,7 @@ func main() {
 	ctx := context.Background()
 	logger := configureLogger(ctx)
 
-	logger.Info("Consumer is starting")
+	logger.Info("ConsumerLLMResult is starting")
 
 	consumer, mongoClient, kafkaReader := configureConsumer(ctx, logger, config)
 
@@ -37,17 +40,17 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-		logger.Info("Consumer started")
+		logger.Info("ConsumerLLMResult started")
 
 		err := consumer.Start(ctx)
 		if err != nil {
-			logger.Errorf("Consumer returned error: %s", err)
+			logger.Errorf("ConsumerLLMResult returned error: %s", err)
 			close(done)
 		}
 	}()
 
 	<-done
-	logger.Info("Consumer is stopping")
+	logger.Info("ConsumerLLMResult is stopping")
 
 	cancel()
 
@@ -65,13 +68,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Infof("Worker stopped")
+	logger.Infof("WorkerLaunchLLMCheck stopped")
 }
 
 func configureConsumer(
 	ctx context.Context,
-	logger *logrus.Logger,
-	config config2.Consumer,
+	logger logger2.Logger,
+	config config2.ConsumerLLMResult,
 ) (*llm_result.Consumer, *mongo.Client, *kafka.Reader) {
 	launchEnvironment, err := config.GetEnvironment()
 	if err != nil {
@@ -94,7 +97,7 @@ func configureConsumer(
 	options := options2.Client().
 		ApplyURI(mongoUrl).
 		SetTimeout(time.Second).
-		SetAppName("consumer").
+		SetAppName(applicationName).
 		SetConnectTimeout(10 * time.Second).
 		SetMaxConnecting(10).
 		SetMinPoolSize(5).
@@ -125,7 +128,7 @@ func configureConsumer(
 	return consumer, mongoClient, kafkaReader
 }
 
-func configureLogger(ctx context.Context) *logrus.Logger {
+func configureLogger(ctx context.Context) logger2.Logger {
 	logger := logrus.New()
 
 	formatter := new(logrus.JSONFormatter)
@@ -141,17 +144,18 @@ func configureLogger(ctx context.Context) *logrus.Logger {
 	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
-	logger = logger.
-		WithField("environment", launchEnvironment).
-		WithField("application", "consumer").
-		Logger
 
-	return logger
+	return logger.WithFields(
+		logrus.Fields{
+			"environment": launchEnvironment,
+			"application": applicationName,
+		},
+	)
 }
 
 func configureKafkaReader(
-	logger *logrus.Logger,
-	config config2.Consumer,
+	logger logger2.Logger,
+	config config2.ConsumerLLMResult,
 ) *kafka.Reader {
 	topic, err := config.GetKafkaTopicLLMResult()
 	if err != nil {

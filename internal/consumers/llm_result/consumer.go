@@ -6,20 +6,20 @@ import (
 	"errors"
 	"fmt"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
-	"github.com/sirupsen/logrus"
 )
 
 type Consumer struct {
-	logger     *logrus.Logger
+	logger     logger.Logger
 	reader     *kafka.Reader
 	llmStorage llmStorage
 }
 
 func NewConsumer(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	reader *kafka.Reader,
 	llmStorage llmStorage,
 ) *Consumer {

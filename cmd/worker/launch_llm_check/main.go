@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
+	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/producers/llm_check"
 	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/test"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/workers/model_check"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/workers/launch_llm_check"
 	"github.com/joho/godotenv"
 	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
@@ -18,6 +19,8 @@ import (
 	"time"
 )
 
+const applicationName = "worker_launch_llm_check"
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -25,11 +28,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	config := config2.ProvideWorkerConfig()
+	config := config2.ProvideWorkerLaunchLLMCheckConfig()
 	ctx := context.Background()
 	logger := configureLogger(ctx, config)
 
-	logger.Info("Worker is starting")
+	logger.Info("WorkerLaunchLLMCheck is starting")
 
 	worker, mongoClient, kafkaWriter := configureWorker(ctx, logger, config)
 
@@ -39,17 +42,17 @@ func main() {
 	ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
-		logger.Info("Worker started")
+		logger.Info("WorkerLaunchLLMCheck started")
 
 		err := worker.Start(ctx)
 		if err != nil {
-			logger.Errorf("Worker returned error: %s", err)
+			logger.Errorf("WorkerLaunchLLMCheck returned error: %s", err)
 			close(done)
 		}
 	}()
 
 	<-done
-	logger.Info("Worker is stopping")
+	logger.Info("WorkerLaunchLLMCheck is stopping")
 
 	cancel()
 
@@ -67,14 +70,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Infof("Worker stopped")
+	logger.Infof("WorkerLaunchLLMCheck stopped")
 }
 
 func configureWorker(
 	ctx context.Context,
-	logger *logrus.Logger,
-	config config2.Worker,
-) (*model_check.Worker, *mongo.Client, *kafka.Writer) {
+	logger logger2.Logger,
+	config config2.WorkerLaunchLLMCheck,
+) (*launch_llm_check.Worker, *mongo.Client, *kafka.Writer) {
 	launchEnvironment, err := config.GetEnvironment()
 	if err != nil {
 		logger.Errorf("config.GetEnvironment: %s", err)
@@ -96,7 +99,7 @@ func configureWorker(
 	options := options2.Client().
 		ApplyURI(mongoUrl).
 		SetTimeout(time.Second).
-		SetAppName("worker").
+		SetAppName(applicationName).
 		SetConnectTimeout(10 * time.Second).
 		SetMaxConnecting(10).
 		SetMinPoolSize(5).
@@ -126,15 +129,15 @@ func configureWorker(
 
 	llmCheckProducer := llm_check.NewProducer(logger, kafkaWriter)
 
-	modelCheckWorker := model_check.NewWorker(logger, llmStorage, testsStorage, llmCheckProducer)
+	modelCheckWorker := launch_llm_check.NewWorker(logger, llmStorage, testsStorage, llmCheckProducer)
 
 	return modelCheckWorker, mongoClient, kafkaWriter
 }
 
 func configureLogger(
 	ctx context.Context,
-	config config2.Worker,
-) *logrus.Logger {
+	config config2.WorkerLaunchLLMCheck,
+) logger2.Logger {
 	logger := logrus.New()
 
 	formatter := new(logrus.JSONFormatter)
@@ -150,17 +153,18 @@ func configureLogger(
 	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
-	logger = logger.
-		WithField("environment", launchEnvironment).
-		WithField("application", "worker").
-		Logger
 
-	return logger
+	return logger.WithFields(
+		logrus.Fields{
+			"environment": launchEnvironment,
+			"application": applicationName,
+		},
+	)
 }
 
 func configureKafkaWriter(
-	logger *logrus.Logger,
-	config config2.Worker,
+	logger logger2.Logger,
+	config config2.WorkerLaunchLLMCheck,
 ) *kafka.Writer {
 	topic, err := config.GetKafkaTopicLLMCheck()
 	if err != nil {

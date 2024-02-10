@@ -15,7 +15,7 @@ type consumerConfig struct {
 	kafkaConsumerGroupCached  *string
 }
 
-func ProvideConsumerConfig() Consumer {
+func ProvideConsumerConfig() ConsumerLLMResult {
 	return &consumerConfig{}
 }
 

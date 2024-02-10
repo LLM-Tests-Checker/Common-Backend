@@ -4,20 +4,20 @@ import (
 	"encoding/json"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
-	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type Handler struct {
-	logger      *logrus.Logger
+	logger      logger.Logger
 	creator     testCreator
 	mapper      testMapper
 	tokenParser tokenParser
 }
 
 func New(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	creator testCreator,
 	mapper testMapper,
 	tokenParser tokenParser,

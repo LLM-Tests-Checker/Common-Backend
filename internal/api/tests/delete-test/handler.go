@@ -3,18 +3,18 @@ package delete_test
 import (
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
-	"github.com/sirupsen/logrus"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"net/http"
 )
 
 type Handler struct {
-	logger      *logrus.Logger
+	logger      logger.Logger
 	deleter     testDeleter
 	tokenParser tokenParser
 }
 
 func New(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	deleter testDeleter,
 	tokenParser tokenParser,
 ) *Handler {

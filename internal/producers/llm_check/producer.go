@@ -4,17 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/segmentio/kafka-go"
-	"github.com/sirupsen/logrus"
 )
 
 type Producer struct {
-	logger *logrus.Logger
+	logger logger.Logger
 	writer *kafka.Writer
 }
 
 func NewProducer(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	writer *kafka.Writer,
 ) *Producer {
 	return &Producer{

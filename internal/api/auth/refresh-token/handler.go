@@ -4,17 +4,17 @@ import (
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
-	"github.com/sirupsen/logrus"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"net/http"
 )
 
 type Handler struct {
-	logger         *logrus.Logger
+	logger         logger.Logger
 	tokenRefresher tokenRefresher
 }
 
 func New(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	tokenRefresher tokenRefresher,
 ) *Handler {
 	return &Handler{

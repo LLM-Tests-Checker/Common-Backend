@@ -1,4 +1,4 @@
-package model_check
+package launch_llm_check
 
 import (
 	"context"

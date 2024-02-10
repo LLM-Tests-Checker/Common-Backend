@@ -43,6 +43,8 @@ import (
 	"time"
 )
 
+const applicationName = "server"
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -74,7 +76,7 @@ func main() {
 		WriteTimeout:      5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		BaseContext: func(listener net.Listener) context.Context {
-			return context.WithValue(ctx, logger2.Logger, logger)
+			return context.WithValue(ctx, logger2.VariableLogger, logger)
 		},
 	}
 
@@ -113,7 +115,7 @@ func main() {
 }
 
 func configureRouter(
-	logger *logrus.Logger,
+	logger logger2.Logger,
 	ctx context.Context,
 	config config2.Server,
 ) (*chi.Mux, *mongo.Client) {
@@ -145,7 +147,7 @@ func configureRouter(
 	options := options2.Client().
 		ApplyURI(mongoUrl).
 		SetTimeout(time.Second).
-		SetAppName("server").
+		SetAppName(applicationName).
 		SetConnectTimeout(10 * time.Second).
 		SetMaxConnecting(10).
 		SetMinPoolSize(5).
@@ -249,7 +251,7 @@ func configureRouter(
 func configureLogger(
 	ctx context.Context,
 	config config2.Server,
-) *logrus.Logger {
+) logger2.Logger {
 	logger := logrus.New()
 
 	formatter := new(logrus.JSONFormatter)
@@ -265,12 +267,13 @@ func configureLogger(
 	logger = logger.WithContext(ctx).Logger
 	logger.SetReportCaller(true)
 	logger.SetFormatter(formatter)
-	logger = logger.
-		WithField("environment", launchEnvironment).
-		WithField("application", "server").
-		Logger
 
-	return logger
+	return logger.WithFields(
+		logrus.Fields{
+			"environment": launchEnvironment,
+			"application": applicationName,
+		},
+	)
 }
 
 type server struct {

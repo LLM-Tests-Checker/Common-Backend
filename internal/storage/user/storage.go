@@ -3,9 +3,9 @@ package user
 import (
 	"context"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/users"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
@@ -15,12 +15,12 @@ import (
 const userCollectionName = "user"
 
 type Storage struct {
-	logger     *logrus.Logger
+	logger     logger.Logger
 	collection *mongo.Collection
 }
 
 func NewUserStorage(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	database *mongo.Database,
 ) *Storage {
 	return &Storage{

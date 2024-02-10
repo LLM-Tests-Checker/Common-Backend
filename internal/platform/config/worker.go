@@ -14,7 +14,11 @@ type workerConfig struct {
 	kafkaTopicLLMCheckCached *string
 }
 
-func ProvideWorkerConfig() Worker {
+func ProvideWorkerLaunchLLMCheckConfig() WorkerLaunchLLMCheck {
+	return &workerConfig{}
+}
+
+func ProvideWorkerDropOldLLMCheckConfig() WorkerDropOldInProgressLLMCheck {
 	return &workerConfig{}
 }
 

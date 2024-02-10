@@ -23,7 +23,7 @@ type Server interface {
 	GetMongoDatabase() (string, error)
 }
 
-type Worker interface {
+type WorkerLaunchLLMCheck interface {
 	GetEnvironment() (Environment, error)
 
 	GetMongoUrl() (string, error)
@@ -33,7 +33,11 @@ type Worker interface {
 	GetKafkaTopicLLMCheck() (string, error)
 }
 
-type Consumer interface {
+type WorkerDropOldInProgressLLMCheck interface {
+	GetEnvironment() (Environment, error)
+}
+
+type ConsumerLLMResult interface {
 	GetEnvironment() (Environment, error)
 
 	GetMongoUrl() (string, error)

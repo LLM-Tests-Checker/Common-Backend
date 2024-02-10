@@ -6,19 +6,19 @@ import (
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
 	http2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
-	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 type Handler struct {
-	logger      *logrus.Logger
+	logger      logger.Logger
 	launcher    checkLauncher
 	tokenParser tokenParser
 }
 
 func New(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	launcher checkLauncher,
 	tokenParser tokenParser,
 ) *Handler {

@@ -1,17 +1,17 @@
-package model_check
+package launch_llm_check
 
 import (
 	"context"
 	error2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/error"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/producers/llm_check"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
-	"github.com/sirupsen/logrus"
 	"time"
 )
 
 type Worker struct {
-	logger           *logrus.Logger
+	logger           logger.Logger
 	llmStorage       llmStorage
 	testsStorage     testsStorage
 	producer         producer
@@ -19,7 +19,7 @@ type Worker struct {
 }
 
 func NewWorker(
-	logger *logrus.Logger,
+	logger logger.Logger,
 	llmStorage llmStorage,
 	testsStorage testsStorage,
 	producer producer,
