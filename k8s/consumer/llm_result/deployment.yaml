@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-llm-result-deployment
+  labels:
+    app: consumer-llm-result
+    repository: common-backend
+    owner: Ferum-bot
+    tier: backend
+    infrastructure: golang
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer-llm-result
+      tier: backend
+      repository: common-backend
+  template:
+    metadata:
+      labels:
+        app: consumer-llm-result
+        tier: backend
+        owner: Ferum-bot
+        repository: common-backend
+        infrastructure: golang
+    spec:
+      containers:
+        - name: consumer-llm-result-container
+          image: $REPOSITORY_NAME:$IMAGE_TAG
+          livenessProbe:
+            httpGet:
+              port: 8182
+              path: /metrics
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              port: 8182
+              path: /metrics
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          startupProbe:
+            httpGet:
+              port: 8182
+              path: /metrics
+            failureThreshold: 30
+            periodSeconds: 10
+          ports:
+            - containerPort: 8182
+              hostPort: 8182

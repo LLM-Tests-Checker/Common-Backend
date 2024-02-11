@@ -1,55 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: server-deployment
+  name: worker-launch-llm-check-deployment
   labels:
-    app: server
+    app: worker-launch-llm-check
     repository: common-backend
     owner: Ferum-bot
     tier: backend
     infrastructure: golang
   namespace: default
 spec:
-  replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
+  replicas: 1
   selector:
     matchLabels:
-      app: server
+      app: worker-launch-llm-check
       tier: backend
       repository: common-backend
   template:
     metadata:
       labels:
-        app: server
+        app: worker-launch-llm-check
         tier: backend
         owner: Ferum-bot
         repository: common-backend
         infrastructure: golang
     spec:
       containers:
-        - name: server-container
+        - name: worker-launch-llm-check-container
           image: $REPOSITORY_NAME:$IMAGE_TAG
           livenessProbe:
             httpGet:
-              port: 8181
+              port: 8183
               path: /metrics
             initialDelaySeconds: 10
             periodSeconds: 5
           readinessProbe:
             httpGet:
-              port: 8181
+              port: 8183
               path: /metrics
             initialDelaySeconds: 10
             periodSeconds: 5
           startupProbe:
             httpGet:
-              port: 8181
+              port: 8183
               path: /metrics
             failureThreshold: 30
             periodSeconds: 10
           ports:
-            - containerPort: 8181
-              hostPort: 8181
+            - containerPort: 8183
+              hostPort: 8183

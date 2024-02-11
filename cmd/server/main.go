@@ -17,11 +17,9 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/api/tests/mappers"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/jwt"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
-	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/metrics"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
+	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/metrics"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/tests"
@@ -32,6 +30,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
@@ -65,8 +64,6 @@ func main() {
 	}
 
 	router, mongoClient := configureRouter(logger, ctx, config)
-
-	router.Handle("/metrics", promhttp.Handler())
 
 	server := http.Server{
 		Addr:              fmt.Sprintf("localhost:%s", serverPort),
@@ -242,6 +239,8 @@ func configureRouter(
 		getMyTests:   getMyTestsHandler,
 		getTest:      getTestHandler,
 	}
+
+	router.Handle("/metrics", promhttp.Handler())
 
 	dto.HandlerFromMux(&server, router)
 

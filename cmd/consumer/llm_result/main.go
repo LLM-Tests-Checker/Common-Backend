@@ -2,15 +2,20 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/consumers/llm_result"
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,6 +23,7 @@ import (
 )
 
 const applicationName = "consumer_llm_result"
+const metricsServerPort = "8182"
 
 func main() {
 	err := godotenv.Load()
@@ -34,6 +40,8 @@ func main() {
 
 	consumer, mongoClient, kafkaReader := configureConsumer(ctx, logger, config)
 
+	metricsServer := configureMetricsServer()
+
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -45,6 +53,16 @@ func main() {
 		err := consumer.Start(ctx)
 		if err != nil {
 			logger.Errorf("Consumer returned error: %s", err)
+			close(done)
+		}
+	}()
+
+	go func() {
+		logger.Info("Consumer metrics server started")
+
+		err := metricsServer.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Errorf("server.ListerAndServer: %s", err)
 			close(done)
 		}
 	}()
@@ -190,4 +208,16 @@ func configureKafkaReader(
 	})
 
 	return reader
+}
+
+func configureMetricsServer() *http.Server {
+	router := chi.NewRouter()
+	router.Handle("/metrics", promhttp.Handler())
+
+	server := http.Server{
+		Addr:    fmt.Sprintf("localhost:%s", metricsServerPort),
+		Handler: router,
+	}
+
+	return &server
 }

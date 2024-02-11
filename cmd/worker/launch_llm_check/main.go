@@ -2,17 +2,22 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/producers/llm_check"
 	llm2 "github.com/LLM-Tests-Checker/Common-Backend/internal/storage/llm"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/storage/test"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/workers/launch_llm_check"
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/segmentio/kafka-go"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
 	options2 "go.mongodb.org/mongo-driver/mongo/options"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,6 +25,7 @@ import (
 )
 
 const applicationName = "worker_launch_llm_check"
+const metricsServerPort = "8183"
 
 func main() {
 	err := godotenv.Load()
@@ -36,6 +42,8 @@ func main() {
 
 	worker, mongoClient, kafkaWriter := configureWorker(ctx, logger, config)
 
+	metricsServer := configureMetricsServer()
+
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -47,6 +55,16 @@ func main() {
 		err := worker.Start(ctx)
 		if err != nil {
 			logger.Errorf("Worker returned error: %s", err)
+			close(done)
+		}
+	}()
+
+	go func() {
+		logger.Info("Worker metrics server started")
+
+		err := metricsServer.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Errorf("Worker metrics server returned error: %s", err)
 			close(done)
 		}
 	}()
@@ -191,4 +209,16 @@ func configureKafkaWriter(
 	}
 
 	return &writer
+}
+
+func configureMetricsServer() *http.Server {
+	router := chi.NewRouter()
+	router.Handle("/metrics", promhttp.Handler())
+
+	server := http.Server{
+		Addr:    fmt.Sprintf("localhost:%s", metricsServerPort),
+		Handler: router,
+	}
+
+	return &server
 }
