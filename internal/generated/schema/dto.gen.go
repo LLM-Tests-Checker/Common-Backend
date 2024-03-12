@@ -168,9 +168,6 @@ type SignUpRequest struct {
 	// UserLogin User unique login
 	UserLogin string `json:"user_login"`
 
-	// UserName User friendly name
-	UserName string `json:"user_name"`
-
 	// UserPasswordHash User password hash in SHA512
 	UserPasswordHash string `json:"user_password_hash"`
 }
@@ -239,7 +236,7 @@ type ServerInterface interface {
 	// Updating system access token using refresh token
 	// (POST /api/v1/auth/refresh-token)
 	AuthRefreshToken(w http.ResponseWriter, r *http.Request, params AuthRefreshTokenParams)
-	// User login to the system with username and password
+	// User login to the system with login and password
 	// (POST /api/v1/auth/sign-in)
 	AuthSignIn(w http.ResponseWriter, r *http.Request)
 	// User registration in the system
@@ -278,7 +275,7 @@ func (_ Unimplemented) AuthRefreshToken(w http.ResponseWriter, r *http.Request, 
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// User login to the system with username and password
+// User login to the system with login and password
 // (POST /api/v1/auth/sign-in)
 func (_ Unimplemented) AuthSignIn(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)

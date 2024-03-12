@@ -6,11 +6,10 @@ import (
 )
 
 type authenticator interface {
-	PerformSignUp(ctx context.Context, name, login, passwordHash string) (*auth.UserTokens, error)
+	PerformSignUp(ctx context.Context, login, passwordHash string) (*auth.UserTokens, error)
 }
 
 type inputValidator interface {
-	ValidateName(name string) error
 	ValidateLogin(login string) error
 	ValidatePasswordHash(passwordHash string) error
 }
