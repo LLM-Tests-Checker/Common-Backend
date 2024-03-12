@@ -20,5 +20,16 @@ spec:
         spec:
           containers:
             - name: worker-drop-old-in-progress-llm-check
-              image: $REPOSITORY_NAME:$IMAGE_TAG
+              image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-worker-drop-old-in-progress-llm-check:latest
+              env:
+                - name: ENVIRONMENT
+                  value: "PRODUCTION"
+                - name: MONGODB_URL
+                  value: "${{MONGODB_URL}}"
+                - name: MONGODB_DATABASE
+                  value: "${{MONGODB_DATABASE}}"
+                - name: KAFKA_URL
+                  value: "${{KAFKA_URL}}"
+                - name: KAFKA_TOPIC_LLM_CHECK
+                  value: "${{KAFKA_TOPIC_LLM_CHECK}}"
           restartPolicy: Never

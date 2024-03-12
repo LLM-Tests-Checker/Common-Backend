@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: server-container
-          image: $REPOSITORY_NAME:$IMAGE_TAG
+          image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-server:latest
           livenessProbe:
             httpGet:
               port: 8181
@@ -53,3 +53,22 @@ spec:
           ports:
             - containerPort: 8181
               hostPort: 8181
+          env:
+            - name: SERVER_PORT
+              value: "8181"
+            - name: ENVIRONMENT
+              value: "PRODUCTION"
+            - name: TOKEN_ACCESS_SIGN_SECRET
+              value: "${{TOKEN_ACCESS_SIGN_SECRET}}"
+            - name: TOKEN_REFRESH_SIGN_SECRET
+              value: "${{TOKEN_REFRESH_SIGN_SECRET}}"
+            - name: TOKEN_ISSUER
+              value: "${{TOKEN_ISSUER}}"
+            - name: TOKEN_ACCESS_LIFETIME_SECONDS
+              value: "3600"
+            - name: TOKEN_REFRESH_LIFETIME_SECONDS
+              value: "2678400"
+            - name: MONGODB_URL
+              value: "${{MONGODB_URL}}"
+            - name: MONGODB_DATABASE
+              value: "${{MONGODB_DATABASE}}"

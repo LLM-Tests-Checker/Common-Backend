@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: consumer-llm-result-container
-          image: $REPOSITORY_NAME:$IMAGE_TAG
+          image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-consumer-llm-result:latest
           livenessProbe:
             httpGet:
               port: 8182
@@ -49,3 +49,18 @@ spec:
           ports:
             - containerPort: 8182
               hostPort: 8182
+          env:
+            - name: ENVIRONMENT
+              value: "PRODUCTION"
+            - name: SERVER_PORT
+              value: "8182"
+            - name: MONGODB_URL
+              value: "${{MONGODB_URL}}"
+            - name: MONGODB_DATABASE
+              value: "${{MONGODB_DATABASE}}"
+            - name: KAFKA_URL
+              value: "${{KAFKA_URL}}"
+            - name: KAFKA_TOPIC_LLM_RESULT
+              value: "llm_tests_results"
+            - name: KAFKA_CONSUMER_GROUP_ID
+              value: "common_backend_consumer_llm_results"
