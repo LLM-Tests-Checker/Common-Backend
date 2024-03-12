@@ -30,3 +30,8 @@ launch-worker:
 build-all-docker-images:
 	docker build -t common-backend-server:latest -f ./docker/server/Dockerfile .
 
+	docker build -t common-backend-consumer-llm-result:latest -f ./docker/consumer/llm_result/Dockerfile .
+
+	docker build -t common-backend-worker-drop-old-in-progress-llm-check:latest -f ./docker/worker/drop_old_in_progress_llm_check/Dockerfile .
+	docker build -t common-backend-worker-launch_llm_check:latest -f ./docker/worker/launch_llm_check/Dockerfile .
+

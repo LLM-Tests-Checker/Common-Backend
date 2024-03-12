@@ -30,8 +30,7 @@ const metricsServerPort = "8183"
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		logrus.Errorf("godotenv.Load: %s", err)
-		os.Exit(1)
+		logrus.Warnf("godotenv.Load: %s", err)
 	}
 
 	config := config2.ProvideWorkerLaunchLLMCheckConfig()

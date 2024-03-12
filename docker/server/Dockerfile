@@ -21,6 +21,4 @@ ENV TZ Europe/Moscow
 
 COPY --from=builder /app/server /app/server
 
-ADD .env app/
-
 CMD ["./app/server"]
