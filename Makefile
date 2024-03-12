@@ -27,3 +27,6 @@ launch-worker:
 	go run ./cmd/worker/launch_llm_check/main.go
 	go run ./cmd/worker/drop_old_in_progress_llm_check/main.go
 
+build-all-docker-images:
+	docker build -t common-backend-server:latest -f ./docker/server/Dockerfile .
+
