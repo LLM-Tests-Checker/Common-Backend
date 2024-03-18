@@ -18,6 +18,7 @@ import (
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/components/jwt"
 	dto "github.com/LLM-Tests-Checker/Common-Backend/internal/generated/schema"
 	config2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/config"
+	cors "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/http"
 	logger2 "github.com/LLM-Tests-Checker/Common-Backend/internal/platform/logger"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/platform/metrics"
 	"github.com/LLM-Tests-Checker/Common-Backend/internal/services/auth"
@@ -119,6 +120,7 @@ func configureRouter(
 
 	router.Use(metrics.CommonMetricsMiddleware)
 	router.Use(logger2.LoggingMiddleware)
+	router.Use(cors.CorsMiddleware)
 	router.Use(logger2.InfrastructureMiddleware)
 	router.Use(middleware.Recoverer)
 
