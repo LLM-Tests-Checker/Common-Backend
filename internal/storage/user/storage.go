@@ -104,11 +104,10 @@ func (storage *Storage) GetUserByLogin(
 
 func (storage *Storage) CreateNewUser(
 	ctx context.Context,
-	name, login, passwordHash string,
+	login, passwordHash string,
 ) (*users.User, error) {
 	rawUser := user{
 		Identifier:   int32(uuid.New().ID()),
-		Name:         name,
 		Login:        login,
 		PasswordHash: passwordHash,
 		CreatedAt:    time.Now().Format(time.RFC3339),
@@ -133,7 +132,6 @@ func convertRawToModel(rawUser user) users.User {
 	}
 	return users.User{
 		Identifier:   users.UserId(rawUser.Identifier),
-		Name:         rawUser.Name,
 		Login:        rawUser.Login,
 		PasswordHash: rawUser.PasswordHash,
 		CreatedAt:    createdAt,

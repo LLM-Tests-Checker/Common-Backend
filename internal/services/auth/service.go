@@ -99,7 +99,7 @@ func (service *Service) PerformSignIn(
 
 func (service *Service) PerformSignUp(
 	ctx context.Context,
-	name, login, passwordHash string,
+	login, passwordHash string,
 ) (*UserTokens, error) {
 	notExists, err := service.userStorage.CheckUserWithLoginNotExists(ctx, login)
 	if err != nil {
@@ -114,7 +114,7 @@ func (service *Service) PerformSignUp(
 		return nil, err
 	}
 
-	createdUser, err := service.userStorage.CreateNewUser(ctx, name, login, passwordHash)
+	createdUser, err := service.userStorage.CreateNewUser(ctx, login, passwordHash)
 	if err != nil {
 		return nil, err
 	}

@@ -15,30 +15,6 @@ func NewValidator() *Validator {
 
 var symbolsRegexp = regexp.MustCompile(`^[A-Za-z0-9]+$`)
 
-func (validator *Validator) ValidateName(name string) error {
-	const minLength = 2
-	const maxLength = 20
-
-	if len(name) > maxLength || len(name) < minLength {
-		return error2.NewBackendError(
-			error2.InputValidationError,
-			"Invalid name length",
-			http.StatusBadRequest,
-		)
-	}
-
-	matched := symbolsRegexp.MatchString(name)
-	if !matched {
-		return error2.NewBackendError(
-			error2.InputValidationError,
-			"Invalid name symbols",
-			http.StatusBadRequest,
-		)
-	}
-
-	return nil
-}
-
 func (validator *Validator) ValidateLogin(login string) error {
 	const minLength = 3
 	const maxLength = 20

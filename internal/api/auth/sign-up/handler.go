@@ -43,7 +43,6 @@ func (handler *Handler) AuthSignUp(response http.ResponseWriter, r *http.Request
 
 	userTokens, err := handler.authenticator.PerformSignUp(
 		r.Context(),
-		request.UserName,
 		request.UserLogin,
 		request.UserPasswordHash,
 	)
@@ -57,12 +56,7 @@ func (handler *Handler) AuthSignUp(response http.ResponseWriter, r *http.Request
 }
 
 func (handler *Handler) validateInput(request dto.SignUpRequest) error {
-	err := handler.inputValidator.ValidateName(request.UserName)
-	if err != nil {
-		return err
-	}
-
-	err = handler.inputValidator.ValidateLogin(request.UserLogin)
+	err := handler.inputValidator.ValidateLogin(request.UserLogin)
 	if err != nil {
 		return err
 	}

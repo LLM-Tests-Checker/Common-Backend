@@ -9,7 +9,7 @@ paths:
     post:
       tags: [ Auth ]
       operationId: auth_sign_in
-      summary: User login to the system with username and password
+      summary: User login to the system with login and password
       requestBody:
         content:
           application/json:
@@ -678,13 +678,8 @@ components:
           maxLength: 128
     SignUpRequest:
       type: object
-      required: [ user_name, user_login, user_password_hash ]
+      required: [ user_login, user_password_hash ]
       properties:
-        user_name:
-          type: string
-          description: User friendly name
-          minLength: 2
-          maxLength: 20
         user_login:
           type: string
           description: User unique login
