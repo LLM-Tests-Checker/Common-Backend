@@ -39,7 +39,7 @@ jobs:
           MONGODB_URL: ${{ secrets.MONGODB_URL }}
           MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
         run: |
-          sed -i "s|{{KAFKA_URL}}|KAFKA_URL|g" ./k8s/consumer/llm_result/deployment.yaml
+          sed -i "s|{{KAFKA_URL}}|$KAFKA_URL|g" ./k8s/consumer/llm_result/deployment.yaml
           sed -i "s|{{MONGODB_URL}}|$MONGODB_URL|g" ./k8s/consumer/llm_result/deployment.yaml
           sed -i "s|{{MONGODB_DATABASE}}|$MONGODB_DATABASE|g" ./k8s/consumer/llm_result/deployment.yaml
 
