@@ -25,11 +25,7 @@ spec:
                 - name: ENVIRONMENT
                   value: "PRODUCTION"
                 - name: MONGODB_URL
-                  value: "${{MONGODB_URL}}"
+                  value: "{{MONGODB_URL}}"
                 - name: MONGODB_DATABASE
-                  value: "${{MONGODB_DATABASE}}"
-                - name: KAFKA_URL
-                  value: "${{KAFKA_URL}}"
-                - name: KAFKA_TOPIC_LLM_CHECK
-                  value: "${{KAFKA_TOPIC_LLM_CHECK}}"
+                  value: "{{MONGODB_DATABASE}}"
           restartPolicy: Never

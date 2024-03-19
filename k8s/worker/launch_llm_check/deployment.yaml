@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: worker-launch-llm-check-container
-          image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-worker-launch_llm_check:latest
+          image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-worker-launch-llm-check:latest
           livenessProbe:
             httpGet:
               port: 8183
@@ -53,10 +53,10 @@ spec:
             - name: ENVIRONMENT
               value: "PRODUCTION"
             - name: MONGODB_URL
-              value: "${{MONGODB_URL}}"
+              value: "{{MONGODB_URL}}"
             - name: MONGODB_DATABASE
-              value: "${{MONGODB_DATABASE}}"
+              value: "{{MONGODB_DATABASE}}"
             - name: KAFKA_URL
-              value: "${{KAFKA_URL}}"
+              value: "{{KAFKA_URL}}"
             - name: KAFKA_TOPIC_LLM_CHECK
-              value: "${{KAFKA_TOPIC_LLM_CHECK}}"
+              value: "llm_tests_launch_tasks"

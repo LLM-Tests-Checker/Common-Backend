@@ -59,16 +59,16 @@ spec:
             - name: ENVIRONMENT
               value: "PRODUCTION"
             - name: TOKEN_ACCESS_SIGN_SECRET
-              value: "${{TOKEN_ACCESS_SIGN_SECRET}}"
+              value: "{{TOKEN_ACCESS_SIGN_SECRET}}"
             - name: TOKEN_REFRESH_SIGN_SECRET
-              value: "${{TOKEN_REFRESH_SIGN_SECRET}}"
+              value: "{{TOKEN_REFRESH_SIGN_SECRET}}"
             - name: TOKEN_ISSUER
-              value: "${{TOKEN_ISSUER}}"
+              value: "{{TOKEN_ISSUER}}"
             - name: TOKEN_ACCESS_LIFETIME_SECONDS
               value: "3600"
             - name: TOKEN_REFRESH_LIFETIME_SECONDS
               value: "2678400"
             - name: MONGODB_URL
-              value: "${{MONGODB_URL}}"
+              value: "{{MONGODB_URL}}"
             - name: MONGODB_DATABASE
-              value: "${{MONGODB_DATABASE}}"
+              value: "{{MONGODB_DATABASE}}"

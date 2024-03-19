@@ -1,0 +1,51 @@
+name: Deploy worker launch-llm-check-deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Deploy Implementer'
+        default: 'World'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to Yandex Cloud Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build docker image
+        run: docker build . --file docker/worker/launch_llm_check/Dockerfile --tag cr.yandex/crpqcg70aaep5tihmd33/common-backend-worker-launch-llm-check:latest
+
+      - name: Push docker image to Yandex.Cloud registry
+        run: docker push cr.yandex/crpqcg70aaep5tihmd33/common-backend-worker-launch-llm-check:latest
+
+      - name: Wait until Yandex.Cloud process new docker image
+        uses: jakejarvis/wait-action@v0.1.1
+        with:
+          time: '30s'
+
+      - name: Substitute the real value of variables
+        env:
+          KAFKA_URL: ${{ secrets.KAFKA_URL }}
+          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+          MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
+        run: |
+          sed -i "s|{{KAFKA_URL}}|KAFKA_URL|g" ./k8s/worker/launch_llm_check/deployment.yaml
+          sed -i "s|{{MONGODB_URL}}|$MONGODB_URL|g" ./k8s/worker/launch_llm_check/deployment.yaml
+          sed -i "s|{{MONGODB_DATABASE}}|$MONGODB_DATABASE|g" ./k8s/worker/launch_llm_check/deployment.yaml
+
+      - name: Deploy to k8s
+        uses: actions-hub/kubectl@v1.21.2
+        env:
+          KUBE_CONFIG: ${{ secrets.K8S_CONFIG }}
+        with:
+          args: apply -f ./k8s/worker/launch_llm_check/deployment.yaml

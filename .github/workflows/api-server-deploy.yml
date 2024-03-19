@@ -11,7 +11,7 @@ on:
 jobs:
   deploy:
    runs-on: ubuntu-latest
-   environment: testing
+   environment: prod
    
    steps:
    - uses: actions/checkout@v3
@@ -23,47 +23,33 @@ jobs:
         yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
          
    - name: Build docker image
-     env:
-       CR_REGISTRY: crpp4a802h6om9om40b4
-       CR_REPOSITORY: mono-backend
-       IMAGE_TAG: ${{ github.event.inputs.release-version }}
-     run: docker build . --file Dockerfile --tag cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:$IMAGE_TAG
+     run: docker build . --file docker/server/Dockerfile --tag cr.yandex/crpqcg70aaep5tihmd33/common-backend-server:latest
      
    - name: Push docker image to Yandex.Cloud registry
-     env:
-       CR_REGISTRY: crpp4a802h6om9om40b4
-       CR_REPOSITORY: mono-backend
-       IMAGE_TAG: ${{ github.event.inputs.release-version }}
-     run: docker push cr.yandex/$CR_REGISTRY/$CR_REPOSITORY:$IMAGE_TAG
+     run: docker push cr.yandex/crpqcg70aaep5tihmd33/common-backend-server:latest
      
-   - name: Wait untill Yandex.Cloud process new docker image
+   - name: Wait until Yandex.Cloud process new docker image
      uses: jakejarvis/wait-action@v0.1.1
      with:
        time: '30s'
           
    - name: Substitute the real value of variables
      env:
-       ENV_MONGODB_URL: ${{ secrets.DATABASE_URL }}
-       ENV_MONGODB_DATABASE: ${{ secrets.DATABASE_USER }}
-       ENV_DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-       ENV_TOKEN_SECRET: ${{ secrets.AUTH_TOKEN_SECRET }}
-       ENV_TOKEN_AUDIENCE: ${{ secrets.AUTH_TOKEN_AUDIENCE }}
-       ENV_TOKEN_ISSUER: ${{ secrets.AUTH_TOKEN_ISSUER }}
-       KAFKA_URL: ${{ secrets.AUTH_TOKEN_ISSUER }}
+       TOKEN_ACCESS_SIGN_SECRET: ${{ secrets.TOKEN_ACCESS_SIGN_SECRET }}
+       TOKEN_REFRESH_SIGN_SECRET: ${{ secrets.TOKEN_REFRESH_SIGN_SECRET }}
+       TOKEN_ISSUER: ${{ secrets.TOKEN_ISSUER }}
+       MONGODB_URL: ${{ secrets.MONGODB_URL }}
+       MONGODB_DATABASE: ${{ secrets.MONGODB_DATABASE }}
      run: |
-           sed -i 's|$REGISTRY_ID|crpp4a802h6om9om40b4|g' ./k8s/deployment.testing.yaml
-           sed -i 's|$REPOSITORY_NAME|mono-backend|g' ./k8s/deployment.testing.yaml
-           sed -i 's|$IMAGE_TAG|${{ github.event.inputs.release-version }}|g' ./k8s/deployment.testing.yaml
-           sed -i "s|{{DATABASE_URL}}|$ENV_DATABASE_URL|g" ./k8s/deployment.testing.yaml
-           sed -i "s|{{DATABASE_USER}}|$ENV_DATABASE_USER|g" ./k8s/deployment.testing.yaml
-           sed -i "s|{{DATABASE_PASSWORD}}|$ENV_DATABASE_PASSWORD|g" ./k8s/deployment.testing.yaml
-           sed -i "s|{{AUTH_TOKEN_SECRET}}|$ENV_TOKEN_SECRET|g" ./k8s/deployment.testing.yaml
-           sed -i "s|{{AUTH_TOKEN_AUDIENCE}}|$ENV_TOKEN_AUDIENCE|g" ./k8s/deployment.testing.yaml
-           sed -i "s|{{AUTH_TOKEN_ISSUER}}|$ENV_TOKEN_ISSUER|g" ./k8s/deployment.testing.yaml
+           sed -i "s|{{TOKEN_ACCESS_SIGN_SECRET}}|$TOKEN_ACCESS_SIGN_SECRET|g" ./k8s/server/deployment.yaml
+           sed -i "s|{{TOKEN_REFRESH_SIGN_SECRET}}|$TOKEN_REFRESH_SIGN_SECRET|g" ./k8s/server/deployment.yaml
+           sed -i "s|{{TOKEN_ISSUER}}|$TOKEN_ISSUER|g" ./k8s/server/deployment.yaml
+           sed -i "s|{{MONGODB_URL}}|$MONGODB_URL|g" ./k8s/server/deployment.yaml
+           sed -i "s|{{MONGODB_DATABASE}}|$MONGODB_DATABASE|g" ./k8s/server/deployment.yaml
   
    - name: Deploy to k8s
      uses: actions-hub/kubectl@v1.21.2
      env:
-       KUBE_CONFIG: ${{ secrets.TESTING_K8S_CONFIG }}
+       KUBE_CONFIG: ${{ secrets.K8S_CONFIG }}
      with:
-       args: apply -f ./k8s/deployment.testing.yaml
+       args: apply -f ./k8s/server/deployment.yaml
