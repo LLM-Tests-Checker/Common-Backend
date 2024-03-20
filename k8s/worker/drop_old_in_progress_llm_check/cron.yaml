@@ -18,6 +18,8 @@ spec:
       activeDeadlineSeconds: 120
       template:
         spec:
+          nodeSelector:
+            server-size: default
           containers:
             - name: worker-drop-old-in-progress-llm-check
               image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-worker-drop-old-in-progress-llm-check:latest

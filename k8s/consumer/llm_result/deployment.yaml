@@ -25,6 +25,8 @@ spec:
         repository: common-backend
         infrastructure: golang
     spec:
+      nodeSelector:
+        server-size: default
       containers:
         - name: consumer-llm-result-container
           image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-consumer-llm-result:latest

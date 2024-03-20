@@ -29,6 +29,8 @@ spec:
         repository: common-backend
         infrastructure: golang
     spec:
+      nodeSelector:
+        server-size: default
       containers:
         - name: server-container
           image: cr.yandex/crpqcg70aaep5tihmd33/common-backend-server:latest
