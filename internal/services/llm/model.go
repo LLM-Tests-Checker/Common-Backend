@@ -15,9 +15,9 @@ type ModelSlug = string
 type CheckStatus = string
 
 const (
-	ModelGPT3      ModelSlug = "gpt3"
-	ModelYandexGPT ModelSlug = "yandex_gpt"
-	Dummy          ModelSlug = "dummy_model"
+	ModelGigaChat ModelSlug = "gigachat"
+	ModelGPT4     ModelSlug = "gpt4"
+	Dummy         ModelSlug = "dummy"
 )
 
 const (

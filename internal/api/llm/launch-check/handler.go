@@ -68,10 +68,10 @@ func (handler *Handler) LlmLaunch(response http.ResponseWriter, r *http.Request,
 
 func mapDtoSlugToModelSlug(dtoSlug dto.LaunchLLMCheckRequestLlmSlug) (llm.ModelSlug, error) {
 	switch dtoSlug {
-	case dto.GPT3:
-		return llm.ModelGPT3, nil
-	case dto.YandexGPT2:
-		return llm.ModelYandexGPT, nil
+	case dto.Gpt4:
+		return llm.ModelGPT4, nil
+	case dto.Gigachat:
+		return llm.ModelGigaChat, nil
 	case dto.Dummy:
 		return llm.Dummy, nil
 	}

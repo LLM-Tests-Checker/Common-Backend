@@ -826,7 +826,7 @@ components:
           description: Large language model unique name
           minLength: 1
           maxLength: 15
-          enum: [ GPT3, YandexGPT2, Dummy ]
+          enum: [ gigachat, gpt4, dummy ]
     LaunchLLMCheckResponse:
       type: object
       required: [ launch_identifier ]
