@@ -8,6 +8,7 @@ func CorsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PATCH, DELETE, PUT")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
 		w.Header().Set("Access-Control-Allow-Credentials", "false")
+		w.Header().Set("Access-Control-Expose-Headers", "X-Llm-Checker-Access-Token, X-Llm-Checker-Refresh-Token")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
